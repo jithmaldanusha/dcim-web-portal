@@ -1,0 +1,90 @@
+/* Main Dropdown Item */
+.dropdown-item-container {
+  margin-bottom: 10px;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: box-shadow 0.3s ease;
+  text-decoration: none; /* Remove link underline */
+  color: inherit; /* Ensure link inherits text color */
+}
+
+.dropdown-item:hover {
+  box-shadow: 0 0 4px #4DBA4A;
+}
+
+.selected {
+  box-shadow: 0 0 4px #4DBA4A;
+}
+
+.dropdown-content {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.dropdown-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+}
+
+.dropdown-name {
+  flex-grow: 1;
+}
+
+.dropdown-arrow {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.3s ease;
+}
+
+/* Dropdown List */
+.dropdown-list {
+  list-style-type: none;
+  padding: 0;
+  margin-top: 5px;
+}
+
+/* Dropdown List */
+.dropdown-list-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.dropdown-list-item:hover,
+.dropdown-list.list-selected {
+  background-color: #4DBA4A;
+  color: white;
+}
+
+.list-selected {
+  background-color: #4DBA4A;
+  color: white;
+}
+
+.dropdown-list-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+}
+
+.dropdown-list-name {
+  flex-grow: 1;
+}
+
+/* Remove default link styles */
+a {
+  text-decoration: none;
+  color: inherit;
+}

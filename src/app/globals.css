@@ -1,0 +1,7 @@
+/* globals.css */
+
+hr {
+    border: 1.5px solid #4a4a4a !important;
+    margin-left: 1px !important;
+    margin-right: 1px !important;
+}
