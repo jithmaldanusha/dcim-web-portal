@@ -1,8 +1,10 @@
 import "../globals.css";
+import "./layout.css";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Sidebar from "../components/sidebar/page";
 import localFont from "next/font/local";
 import TopNavbar from "../components/topnavbar/page";
+import { PageNameProvider } from "../components/pagenamecontext/page";
 
 const geistSans = localFont({
   src: "../fonts/GeistVF.woff",
@@ -22,23 +24,23 @@ export const metadata = {
 
 export default function DashLayout({ children }) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+    <body className={`${geistSans.variable} ${geistMono.variable}`}>
+      <PageNameProvider>
         <div className="container-fluid">
           <div className="row">
-            {/* Sidebar column (3 for large screens) */}
-            <div className="col-xl-3 col-md-3 p-0">
+            {/* Sidebar column (fixed/sticky) */}
+            <div className="col-xl-3 col-md-3 p-0 sidebar-container">
               <Sidebar />
             </div>
 
-            {/* Main content column (remaining space) */}
-            <div className="col-xl-9 col-md-9 p-0">
-              <TopNavbar/>
+            {/* Main content column (scrollable) */}
+            <div className="col-xl-9 col-md-9 p-0 main-content">
+              <TopNavbar />
               {children}
             </div>
           </div>
         </div>
-      </body>
-    </html>
+      </PageNameProvider>
+    </body>
   );
 }

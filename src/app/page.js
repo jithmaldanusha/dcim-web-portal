@@ -4,35 +4,50 @@ import { useRouter } from "next/navigation";
 import './page.css';
 import LoginButton from "./components/formcomponents/buttons/loginbutton";
 import ClearButton from "./components/formcomponents/buttons/clearbutton";
+import { Login } from "./api/session"; // Import the client-side API function
 
 export default function Home() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState(null); // To display error messages
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
 
-  const handleLoginClick = () => {
-    router.push('/dashboard');
+  const handleLoginClick = async () => {
+    try {
+      setErrorMessage(null); // Clear any previous errors
+      const response = await Login(username, password);
+
+      if (response) {
+        localStorage.setItem('token', response.token);
+        router.push('/dashboard');
+      }
+
+    } catch (error) {
+      // Display error message to user
+      setErrorMessage(error.response?.data?.error || 'Failed to log in. Please try again.');
+    }
   };
 
   const handleClearClick = () => {
-    setEmail('');      // Clear email input
-    setPassword('');   // Clear password input
-    setShowPassword(null);
+    setUsername('');      // Clear username input
+    setPassword('');      // Clear password input
+    setShowPassword(false); // Reset password visibility
+    setErrorMessage(null); // Clear any error messages
   };
 
   return (
     <section className="vh-100 d-flex justify-content-center align-items-center">
-      <div className="container-fluid h-custom">
+      <div className="container-fluid">
         <div className="row d-flex justify-content-center align-items-center h-100">
 
-          <div className="container mx-auto col-xl-8 d-flex shadow rounded-3">
+          <div className="container mx-auto col-xl-8 col-md-10 d-flex shadow rounded-3">
             {/* Image Section */}
-            <div className="col-xl-6 d-flex justify-content-center align-items-center" style={{ height: "70vh" }}>
+            <div className="col-xl-6 col-md-5 d-flex justify-content-center align-items-center" style={{ height: "70vh" }}>
               <img
                 src="idclogo.svg"
                 className="img-fluid"
@@ -41,8 +56,8 @@ export default function Home() {
             </div>
 
             {/* Form Section */}
-            <div className="col-xl-5 d-flex justify-content-center align-items-center">
-              <form className="w-75"> 
+            <div className="col-xl-5 col-md-6 d-flex justify-content-center align-items-center">
+              <form className="w-75">
                 <div className="d-flex flex-row justify-content-end mt-4 mb-0">
                   <p className="lead fw-bold mb-0">IDC Manager</p>
                 </div>
@@ -52,27 +67,27 @@ export default function Home() {
                   <p className="lead fw-semibold mb-3">Login</p>
                 </div>
 
-                {/* Email input */}
+                {/* Username input */}
                 <div data-mdb-input-init className="form-outline mb-4">
-                  <label className="form-label" htmlFor="form3Example3">Email address</label>
+                  <label className="form-label" htmlFor="usernameInput">Username</label>
                   <input
-                    type="email"
-                    id="form3Example3"
+                    type="text"
+                    id="usernameInput"
                     className="form-control form-control-lg"
-                    placeholder="Enter a valid email address"
-                    value={email}        // Bind input value to state
-                    onChange={(e) => setEmail(e.target.value)}  // Update state on input change
+                    placeholder="Enter your username"
+                    value={username}        // Bind input value to state
+                    onChange={(e) => setUsername(e.target.value)}  // Update state on input change
                   />
                 </div>
 
                 {/* Password input with toggler */}
                 <div data-mdb-input-init className="form-outline mb-3 position-relative">
-                  <label className="form-label" htmlFor="form3Example4">Password</label>
+                  <label className="form-label" htmlFor="passwordInput">Password</label>
                   <input
                     type={showPassword ? "text" : "password"}
-                    id="form3Example4"
+                    id="passwordInput"
                     className="form-control form-control-lg"
-                    placeholder="Enter password"
+                    placeholder="Enter your password"
                     value={password}      // Bind input value to state
                     onChange={(e) => setPassword(e.target.value)}  // Update state on input change
                   />
@@ -84,6 +99,13 @@ export default function Home() {
                   />
                 </div>
 
+                {/* Error Message */}
+                {errorMessage && (
+                  <div className="text-danger mb-3">
+                    {errorMessage}
+                  </div>
+                )}
+
                 {/* Remember me and Forgot password */}
                 <div className="d-flex justify-content-between align-items-center">
                   <div className="form-check mb-0">
@@ -91,9 +113,9 @@ export default function Home() {
                       className="form-check-input me-2"
                       type="checkbox"
                       value=""
-                      id="form2Example3"
+                      id="rememberMeCheck"
                     />
-                    <label className="form-check-label" htmlFor="form2Example3">
+                    <label className="form-check-label" htmlFor="rememberMeCheck">
                       Remember me
                     </label>
                   </div>
@@ -105,7 +127,10 @@ export default function Home() {
 
                   <ClearButton onClick={handleClearClick} className="m-1" />
 
-                  <LoginButton onClick={handleLoginClick} />
+                  <LoginButton onClick={(e) => {
+                    e.preventDefault();
+                    handleLoginClick();
+                  }} />
 
                 </div>
 

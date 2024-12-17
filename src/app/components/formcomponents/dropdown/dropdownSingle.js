@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import { usePageName } from "../../pagenamecontext/page";
 import './dropdown.css'; 
 
 export default function DropdownItemSingle({
@@ -9,11 +10,12 @@ export default function DropdownItemSingle({
   onSelectItem,
   selectedItem,
 }) {
+  const { setPageName } = usePageName();
   // Handle the click event to select the item
   const handleClick = () => {
     onSelectItem(itemName);
-    // Optionally store in sessionStorage if needed
-    sessionStorage.setItem("selectedDropdownItem", itemName);
+    setPageName(itemName);
+    console.log(itemName);
   };
 
   return (

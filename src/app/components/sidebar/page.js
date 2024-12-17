@@ -19,7 +19,6 @@ export default function Sidebar() {
   const handleSelectItem = (itemName) => {
     const newDropdown = openDropdown === itemName ? null : itemName;
     setOpenDropdown(newDropdown);
-    sessionStorage.setItem("openDropdown", newDropdown); // Store in session storage
   };
 
   const InfrastructurelistItems = [
@@ -32,7 +31,7 @@ export default function Sidebar() {
   ];
 
   return (
-    <div className="sidebar d-flex flex-column vh-100 p-3 shadow-lg">
+    <div className="sidebar d-flex flex-column vh-100 p-3 shadow">
       <div className="d-flex justify-content-between p-0 m-0">
         <div className="fs-6 m-0 p-0">
           <small>

@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import { usePageName } from "../../pagenamecontext/page";
 import './dropdown.css';
 
 export default function DropdownItem({
@@ -11,22 +12,18 @@ export default function DropdownItem({
   openDropdown,
   onOpenDropdown,
 }) {
-  // Check if this dropdown item is the currently open one
+  const { setPageName } = usePageName();
   const isSelected = openDropdown === itemName;
 
   // Handle the click event to toggle the dropdown visibility
   const handleClick = () => {
-    // Toggle the dropdown open state
     onOpenDropdown(itemName);
   };
 
   // Function to handle list item selection and store in session storage
   const handleSelectItem = (itemName) => {
-    // Save the selected item to sessionStorage
-    sessionStorage.setItem("selectedDropdownItem", itemName);
-    console.log(sessionStorage.getItem("selectedDropdownItem"))
-    // Call the external onSelectItem function if needed
     onSelectItem(itemName);
+    setPageName(itemName);
   };
 
   return (
