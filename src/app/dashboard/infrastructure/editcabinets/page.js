@@ -2,8 +2,13 @@
 import FormInput from "@/app/components/formcomponents/form_input/page";
 import { useState, useEffect } from "react";
 import { getCabinets, getCabinetByLocation, getRequiredData, updateCabinet, addNewCabinet, deleteCabinet } from "@/app/api/cabinets";
+import { ValidateToken } from "@/app/api/session";
+import { useRouter } from "next/navigation";
+import SessionTimeout from "@/app/components/utils/sessiontimeout";
 
-export default function EditCabinets() {
+
+export default function EditCabinet() {
+    const router = useRouter();
     const initialFormData = {
         cabinetID: "",
         cabinet: "",
@@ -19,6 +24,10 @@ export default function EditCabinets() {
         maxKW: "",
         maxWeight: "",
         dateOfInstallation: "",
+        mapX1: "",
+        mapX2: "",
+        mapY1: "",
+        mapY2: "",
         notes: "",
     };
 
@@ -31,6 +40,33 @@ export default function EditCabinets() {
     const [assignedTos, setAssignedTos] = useState([]);
     const [zones, setZones] = useState([]);
     const [cabinetRows, setCabinetRows] = useState([]);
+    const [sessionExpired, setSessionExpired] = useState(false);
+
+    useEffect(() => {
+        const token = localStorage.getItem('token')
+        if (!token) {
+            setSessionExpired(true);
+            return;
+        }
+
+        const validateAndHandleExpiration = async () => {
+            try {
+                await ValidateToken(token);
+            } catch (error) {
+                localStorage.removeItem("token");
+                setSessionExpired(true);
+            }
+        };
+
+        validateAndHandleExpiration();
+    }, [router]);
+
+    const handleModalClose = () => {
+        setSessionExpired(false);
+        router.push("/").then(() => {
+            router.reload();
+        });
+    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -40,9 +76,9 @@ export default function EditCabinets() {
                 setCabinetsData(cabinets);
 
                 const datacenterOptions = dropdowndata.datacenters.map(dc => dc.Name);
-                const departmentOptions = dropdowndata.departments.map(dc => dc.Name);
-                const zonesOptions = dropdowndata.zones.map(dc => dc.Description);
-                const cabinetRowsOptions = dropdowndata.cabinetrows.map(dc => dc.Name);
+                const departmentOptions = ["General Use", ...dropdowndata.departments.map(dc => dc.Name)];
+                const zonesOptions = ["N/A", ...dropdowndata.zones.map(dc => dc.Description)];
+                const cabinetRowsOptions = ["N/A", ...dropdowndata.cabinetRows.map(dc => dc.Name)];
 
                 setDataCenters(datacenterOptions);
                 setAssignedTos(departmentOptions);
@@ -58,19 +94,28 @@ export default function EditCabinets() {
     }, []);
 
     const handleCabinetSelect = async (selectedCabinet) => {
+        if (selectedCabinet === "New") {
+            setFormData((prevState) => ({
+                ...prevState,
+                cabinet: "",
+                location: "",
+            }));
+            return; // Exit early for "New"
+        }
+    
         try {
             const cabinetLocation = selectedCabinet.split(',')[0].trim();
             const cabinetDetails = await getCabinetByLocation(cabinetLocation);
-
+    
             setFormData((prevState) => ({
                 ...prevState,
                 cabinetID: cabinetDetails ? cabinetDetails.CabinetID : null,
-                cabinet: cabinetDetails ? cabinetDetails.Cabinet : selectedCabinet,
-                location: cabinetDetails ? cabinetDetails.Location : null,
+                cabinet: cabinetDetails ? cabinetDetails.Cabinet : cabinetLocation,
+                location: cabinetDetails ? cabinetDetails.Cabinet : null,
                 dataCenter: cabinetDetails ? cabinetDetails.DataCenter : null,
-                assignedTo: cabinetDetails ? cabinetDetails.AssignedTo || "" : null,
-                zone: cabinetDetails ? cabinetDetails.Zone : null,
-                cabinetRow: cabinetDetails ? cabinetDetails.CabinetRow : null,
+                assignedTo: cabinetDetails ? cabinetDetails.AssignedTo || "General Use" : null,
+                zone: cabinetDetails ? cabinetDetails.Zone || "N/A" : null,
+                cabinetRow: cabinetDetails ? cabinetDetails.CabinetRow || "N/A" : null,
                 cabinetHeight: cabinetDetails ? cabinetDetails.CabinetHeight : null,
                 u1Position: cabinetDetails ? cabinetDetails.U1Position : null,
                 model: cabinetDetails ? cabinetDetails.Model : null,
@@ -78,12 +123,16 @@ export default function EditCabinets() {
                 maxKW: cabinetDetails ? cabinetDetails.MaxKW : null,
                 maxWeight: cabinetDetails ? cabinetDetails.MaxWeight : null,
                 dateOfInstallation: cabinetDetails ? cabinetDetails.DateOfInstallation.substring(0, 10) : null,
+                mapX1: cabinetDetails ? cabinetDetails.x1 : null,
+                mapX2: cabinetDetails ? cabinetDetails.x2 : null,
+                mapY1: cabinetDetails ? cabinetDetails.y1 : null,
                 notes: cabinetDetails ? cabinetDetails.Notes : null,
             }));
         } catch (err) {
             console.error("Error fetching cabinet details:", err);
         }
     };
+    
 
     const validateForm = () => {
         const newErrors = {};
@@ -128,35 +177,35 @@ export default function EditCabinets() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
         if (!validateForm()) {
             console.log(formData);
             return;
         }
-
+        console.log(formData);
         setLoading(true);
         setErrors({});
 
-        try {
-            let result;
+        // try {
+        //     let result;
 
-            if (formData.cabinetID) {
-                result = await updateCabinet(formData);
-            } else {
-                result = await addNewCabinet(formData);
-            }
+        //     if (formData.cabinetID) {
+        //         result = await updateCabinet(formData);
+        //     } else {
+        //         result = await addNewCabinet(formData);
+        //     }
 
-            if (result.success) {
-                setSuccess(true);
-                setFormData(initialFormData);
-            } else {
-                setErrors({ apiError: result.message || 'Failed to update/insert cabinet' });
-            }
-        } catch (error) {
-            setErrors({ apiError: 'An error occurred while saving the data. Please try again.' });
-        } finally {
-            setLoading(false);
-        }
+        //     if (result.success) {
+        //         setSuccess(true);
+        //         setFormData(initialFormData);
+        //     } else {
+        //         setErrors({ apiError: result.message || 'Failed to update/insert cabinet' });
+        //     }
+        // } catch (error) {
+        //     setErrors({ apiError: 'An error occurred while saving the data. Please try again.' });
+        // } finally {
+        //     setLoading(false);
+        //     router.refresh();
+        // }
     };
 
     const handleClear = () => {
@@ -192,6 +241,8 @@ export default function EditCabinets() {
 
     return (
         <div className="container p-5">
+            <SessionTimeout show={sessionExpired} onClose={handleModalClose} />
+
             <div className="col-xl-6">
                 {loading && <p>Loading...</p>}
                 {success && <p className="alert alert-success">Changes saved successfully!</p>}
@@ -203,19 +254,21 @@ export default function EditCabinets() {
                     </div>
                 )}
                 <form onSubmit={handleSubmit}>
+
                     <FormInput
                         type="dropdown"
                         label="Cabinet"
                         firstValue="New"
                         options={cabinetsData.map(item => `${item.Location}, ${item.DataCenterName}`)}
                         onChange={(val) => handleCabinetSelect(val)}
-                        secondaryInputValue="New Cabinet Name"
-                        onSecondaryInputChange={(val) => handleInputChange('cabinet', val)}
+                        onSecondaryInputChange={(val) => {
+                            handleInputChange('cabinet', val);
+                            handleInputChange('location', val);
+                        }}
                         placeholder="Enter New Cabinet Name"
                         secondaryLabel="Add/Edit Cabinet name"
                     />
 
-                    {/* Form Inputs */}
                     <FormInput
                         type="text"
                         label="Location"
@@ -224,7 +277,7 @@ export default function EditCabinets() {
                     />
                     <FormInput
                         type="dropdown"
-                        label="Data Center"
+                        label="Select Data Center"
                         options={dataCenters}
                         value={formData.dataCenter}
                         onChange={(val) => handleInputChange('dataCenter', val)}
@@ -233,21 +286,21 @@ export default function EditCabinets() {
                         type="dropdown"
                         label="Assigned To"
                         options={assignedTos.map(option => option)}
-                        value={formData.assignedTo || "Not Assigned"}
+                        value={formData.assignedTo}
                         onChange={(val) => handleInputChange('assignedTo', val)}
                     />
                     <FormInput
                         type="dropdown"
                         label="Zone"
                         options={zones}
-                        value={formData.zone || "N/A"}
+                        value={formData.zone}
                         onChange={(val) => handleInputChange('zone', val)}
                     />
                     <FormInput
                         type="dropdown"
                         label="Cabinet Row"
                         options={cabinetRows}
-                        value={formData.cabinetRow || "N/A"}
+                        value={formData.cabinetRow}
                         onChange={(val) => handleInputChange('cabinetRow', val)}
                     />
                     <FormInput
@@ -258,9 +311,9 @@ export default function EditCabinets() {
                     />
                     <FormInput
                         type="dropdown"
-                        firstValue="Please Select"
                         label="U1 Position"
                         options={['Bottom', 'Top']}
+                        value={formData.u1Position}
                         onChange={(val) => handleInputChange('u1Position', val)}
                     />
                     <FormInput
@@ -293,6 +346,30 @@ export default function EditCabinets() {
                         value={formData.dateOfInstallation}
                         onChange={(val) => handleInputChange('dateOfInstallation', val)}
                         width="50%"
+                    />
+                    <FormInput
+                        type="text"
+                        label="MapX1"
+                        value={formData.mapX1}
+                        onChange={(val) => handleInputChange('mapX1', val)}
+                    />
+                    <FormInput
+                        type="text"
+                        label="MapX2"
+                        value={formData.mapX2}
+                        onChange={(val) => handleInputChange('mapX2', val)}
+                    />
+                    <FormInput
+                        type="text"
+                        label="MapY1"
+                        value={formData.mapY1}
+                        onChange={(val) => handleInputChange('mapY1', val)}
+                    />
+                    <FormInput
+                        type="text"
+                        label="MapY2"
+                        value={formData.mapY2}
+                        onChange={(val) => handleInputChange('mapY2', val)}
                     />
                     <FormInput
                         type="textarea"

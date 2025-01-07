@@ -24,23 +24,24 @@ export const metadata = {
 
 export default function DashLayout({ children }) {
   return (
-    <body className={`${geistSans.variable} ${geistMono.variable}`}>
-      <PageNameProvider>
-        <div className="container-fluid">
-          <div className="row">
-            {/* Sidebar column (fixed/sticky) */}
-            <div className="col-xl-3 col-md-3 p-0 sidebar-container">
-              <Sidebar />
-            </div>
+    
+      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+        <PageNameProvider>
+          <div className="container-fluid">
+            <div className="row">
+              {/* Sidebar column (fixed/sticky) */}
+              <div className="col-xl-3 col-md-3 p-0 sidebar-container">
+                <Sidebar />
+              </div>
 
-            {/* Main content column (scrollable) */}
-            <div className="col-xl-9 col-md-9 p-0 main-content">
-              <TopNavbar />
-              {children}
+              {/* Main content column (scrollable) */}
+              <div className="col-xl-9 col-md-9 p-0 main-content">
+                <TopNavbar />
+                {children}
+              </div>
             </div>
           </div>
-        </div>
-      </PageNameProvider>
-    </body>
+        </PageNameProvider>
+      </body>
   );
 }

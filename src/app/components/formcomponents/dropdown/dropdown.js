@@ -47,7 +47,7 @@ export default function DropdownItem({
       {isSelected && (
         <ul className="dropdown-list">
           {listItems.map((item, index) => (
-            <li className={`dropdown-list-item m-1 ${selectedItem === item.name ? "list-selected" : ""}`} key={index}>
+            <li className={`dropdown-list-item shadow-sm m-1 ${selectedItem === item.name ? "list-selected" : ""}`} key={index}>
               <Link href={item.url} passHref legacyBehavior>
                 <a className="d-flex align-items-center" onClick={() => handleSelectItem(item.name)}>
                   <img src={item.icon} alt={item.name} className="dropdown-list-icon" />

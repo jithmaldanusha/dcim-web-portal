@@ -1,19 +1,20 @@
 "use client"
+import 'bootstrap/dist/css/bootstrap.min.css';
 import { useState, useEffect } from "react";
 import DropdownItem from "../formcomponents/dropdown/dropdown";
 import DropdownItemSingle from "../formcomponents/dropdown/dropdownSingle";
 
 export default function Sidebar() {
+
   const [selectedItem, setSelectedItem] = useState(null);
   const [openDropdown, setOpenDropdown] = useState(null);
+  const [loggedUser, setLoggedUser] = useState(null);
+  const [loggedUserRole, setLoggedUserRole] = useState(null);
 
-  // Retrieve openDropdown state from sessionStorage when the component mounts
   useEffect(() => {
-    const savedDropdown = sessionStorage.getItem("openDropdown");
-    if (savedDropdown) {
-      setOpenDropdown(savedDropdown);
-    }
-  }, []);
+    setLoggedUser(localStorage.getItem('user'))
+    setLoggedUserRole(localStorage.getItem('userRole'))
+  });
 
   // Function to handle when a dropdown item is selected
   const handleSelectItem = (itemName) => {
@@ -22,12 +23,17 @@ export default function Sidebar() {
   };
 
   const InfrastructurelistItems = [
-    { icon: "/formicons/dropdown/Cabinet.svg", name: "Edit Cabinets", url: "/dashboard/infrastructure/editcabinets" },
-    { icon: "/formicons/dropdown/Buildings1.svg", name: "Edit Data Centers", url: "/dashboard/infrastructure/editdatacenters" },
-    { icon: "/formicons/dropdown/Container.svg", name: "Edit Containers", url: "/subitem1" },
-    { icon: "/formicons/dropdown/Location.svg", name: "Edit Zones", url: "/subitem1" },
-    { icon: "/formicons/dropdown/Flex-rows.svg", name: "Edit Rows of Cabinets", url: "/subitem1" },
-    { icon: "/formicons/dropdown/Image3.svg", name: "Edit Images", url: "/subitem1" }
+    { icon: "/formicons/dropdown/Cabinet.svg", name: "Add New Cabinet", url: "/dashboard/infrastructure/editcontainers" },
+    { icon: "/formicons/dropdown/Cabinet.svg", name: "Manage Cabinet", url: "/dashboard/infrastructure/managecabinet" },  
+  ];
+
+  const BulkImportlistItems = [
+    { icon: "/formicons/dropdown/Cabinet.svg", name: "Import Devices", url: "/dashboard/infrastructure/importdevices" },
+  ];
+
+  const userAccountslistItems = [
+    { icon: "/formicons/dropdown/users.svg", name: "My Account", url: "/dashboard/users/manageaccount" },
+    { icon: "/formicons/dropdown/users.svg", name: "Manage Users", url: "/dashboard/users/manageusers" },
   ];
 
   return (
@@ -35,8 +41,8 @@ export default function Sidebar() {
       <div className="d-flex justify-content-between p-0 m-0">
         <div className="fs-6 m-0 p-0">
           <small>
-            <p className="m-0 p-0">User : Yohani</p>
-            <p className="m-0 p-0">Role : Technician</p>
+            <p className="m-0 p-0">User : {loggedUser}</p>
+            <p className="m-0 p-0">Role : {loggedUserRole}</p>
           </small>
         </div>
         <img src="/idclogo.svg" alt="Company Logo" className="img-fluid" style={{ width: "120px" }} />
@@ -65,7 +71,17 @@ export default function Sidebar() {
           <DropdownItem
             icon="/formicons/dropdown/Buildings2.svg"
             itemName="Bulk Import"
-            listItems={InfrastructurelistItems}
+            listItems={BulkImportlistItems}
+            selectedItem={selectedItem}
+            onSelectItem={setSelectedItem}
+            openDropdown={openDropdown}
+            onOpenDropdown={handleSelectItem}
+          />
+
+          <DropdownItem
+            icon="/formicons/dropdown/users.svg"
+            itemName="User Accounts"
+            listItems={userAccountslistItems}
             selectedItem={selectedItem}
             onSelectItem={setSelectedItem}
             openDropdown={openDropdown}
