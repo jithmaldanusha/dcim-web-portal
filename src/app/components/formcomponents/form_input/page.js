@@ -12,26 +12,15 @@ export default function FormInput({
     width = "100%",
     height = "auto",
     placeholder = "Enter Value",
-    secondaryLabel = "",
-    secondaryInputValue = "", // Prop for secondary input value
-    onSecondaryInputChange,
     disabled = false,
     className = ""
 }) {
     const [inputValue, setInputValue] = useState(value);
-    const [secondaryValue, setSecondaryValue] = useState(secondaryInputValue); // State for secondary input
 
-    // Effect to sync inputValue with the parent prop
     useEffect(() => {
         setInputValue(value);
     }, [value]);
 
-    // Effect to set the initial secondary value
-    useEffect(() => {
-        setSecondaryValue(secondaryInputValue || value);
-    }, [value, secondaryInputValue]);
-
-    // Handle changes in the primary input (dropdown or text)
     const handleInputChange = (e) => {
         const newValue = e.target.value;
         setInputValue(newValue);
@@ -40,22 +29,11 @@ export default function FormInput({
         }
     };
 
-    // Handle dropdown changes
     const handleDropdownChange = (e) => {
         const selectedValue = e.target.value;
         setInputValue(selectedValue);
         if (onChange) {
             onChange(selectedValue);
-        }
-    };
-
-    // Handle changes in the secondary input (text field when "New" is selected)
-    const handleSecondaryInputChange = (e) => {
-        const newTextValue = e.target.value;
-        console.log(newTextValue)
-        setSecondaryValue(newTextValue);
-        if (onSecondaryInputChange) {
-            onSecondaryInputChange(newTextValue); // Call the parent handler
         }
     };
 
@@ -66,7 +44,8 @@ export default function FormInput({
 
     return (
         <div className="mb-3 form-input-container">
-            {label && <label className="form-label">{label}</label>}
+            {/* Render label on top for most input types */}
+            {type !== "checkbox" && label && <label className="form-label">{label}</label>}
 
             {type === "text" ? (
                 <input
@@ -86,7 +65,7 @@ export default function FormInput({
                     value={inputValue}
                     onChange={handleInputChange}
                     style={customStyles}
-                    aria-label="Text input"
+                    aria-label="Password input"
                     disabled={disabled}
                     placeholder={placeholder}
                 />
@@ -108,53 +87,41 @@ export default function FormInput({
                     aria-label="Date selector"
                     disabled={disabled}
                 />
-            ) : (
-                <>
-                    <select
-                        className={`form-control form-control-sm custom-input ${className}`}
-                        value={inputValue}
-                        onChange={handleDropdownChange}
-                        style={customStyles}
-                        aria-label="Dropdown select"
+            ) : type === "checkbox" ? (
+                <div className="form-check">
+                    <input
+                        type="checkbox"
+                        className={`form-check-input ${className}`}
+                        checked={inputValue === 1 || 0}
+                        onChange={() => onChange(inputValue === 1 ? 0 : 1)}
+                        aria-label={label}
                         disabled={disabled}
-                    >
-                        {/* Default Select Option */}
-                        <option>
-                            Select
-                        </option>
+                        style={{ width: '15px', height: '15px' }}
+                    />
+                    {/* Render label next to checkbox */}
+                    {label && <label className="form-check-label">{label}</label>}
+                </div>
+            ) : (
+                <select
+                    className={`form-control form-control-sm custom-input ${className}`}
+                    value={inputValue}
+                    onChange={handleDropdownChange}
+                    style={customStyles}
+                    aria-label="Dropdown select"
+                    disabled={disabled}
+                >
+                    <option>Select</option>
 
-                        {/* First Value */}
-                        {firstValue && (
-                            <option value={firstValue}>{firstValue}</option>
-                        )}
-
-                        {/* Additional Options */}
-                        {options.map((option, index) => (
-                            <option key={index} value={option}>
-                                {option}
-                            </option>
-                        ))}
-                    </select>
-
-                    {inputValue === "New" && (
-                        <div className="txt-container mt-3">
-                            {/* Render the secondary label */}
-                            {secondaryLabel && (
-                                <label className="secondary-label">{secondaryLabel}</label>
-                            )}
-                            <input
-                                type="text"
-                                className={`form-control form-control-sm custom-input p-2 ${className}`}
-                                value={secondaryValue}
-                                onChange={handleSecondaryInputChange}
-                                placeholder={placeholder}
-                                aria-label="Editable text input"
-                                style={customStyles}
-                                disabled={disabled}
-                            />
-                        </div>
+                    {firstValue && (
+                        <option value={firstValue}>{firstValue}</option>
                     )}
-                </>
+
+                    {options.map((option, index) => (
+                        <option key={index} value={option}>
+                            {option}
+                        </option>
+                    ))}
+                </select>
             )}
         </div>
     );

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export const fetchUserData = async (userId) => {
   try {
@@ -12,7 +12,6 @@ export const fetchUserData = async (userId) => {
     throw new Error(error.response?.data?.error || "Error getting userdata.");
   }
 };
-
 
 export const updateUsernameAPI = async (newUserId, userId) => {
   try {
@@ -35,6 +34,18 @@ export const updateEmailAPI = async (newUserEmail, userId) => {
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.error || "Error updating email.");
+  }
+};
+
+export const updateEmailPassAPI = async (newUserEmailPass, userId) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/api/useraccounts/update-emailpass`, {
+      newUserEmailPass,
+      userId,
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.error || "Error updating email password.");
   }
 };
 

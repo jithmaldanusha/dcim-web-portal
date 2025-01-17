@@ -6,16 +6,15 @@ import './dropdown.css';
 export default function DropdownItemSingle({
   icon,
   itemName,
-  Url,  // New prop for the URL
+  Url,
   onSelectItem,
   selectedItem,
 }) {
   const { setPageName } = usePageName();
-  // Handle the click event to select the item
+
   const handleClick = () => {
     onSelectItem(itemName);
     setPageName(itemName);
-    console.log(itemName);
   };
 
   return (

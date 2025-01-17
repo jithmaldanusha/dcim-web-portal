@@ -20,7 +20,7 @@ export default function Dashboard() {
         await ValidateToken(token);
       } catch (error) {
         localStorage.removeItem("token");
-        setSessionExpired(true); // Show the modal on session expiration
+        setSessionExpired(true); 
       }
     };
 
@@ -29,7 +29,7 @@ export default function Dashboard() {
 
   const handleModalClose = () => {
     setSessionExpired(false);
-    router.push("/"); // Redirect to login
+    window.location.href = "/";
   };
 
   return (

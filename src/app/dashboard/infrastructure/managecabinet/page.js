@@ -1,12 +1,18 @@
 "use client";
-import { getCabinetsByDataCenter, getRequiredData } from "@/app/api/cabinets"; // Assume this API fetches necessary dropdown data
-import FormInput from "@/app/components/formcomponents/form_input/page"; // FormInput component
+import { deleteCabinet, getCabinetData, getCabinetsByDataCenter, getRequiredData, updateCabinet } from "@/app/api/cabinets";
+import FormInput from "@/app/components/formcomponents/form_input/page";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import SessionTimeout from "@/app/components/utils/sessiontimeout";
+import Confirmation from "@/app/components/utils/confirmationmodal";
+import Spinner from "@/app/components/utils/spinner";
+import SuccessModal from "@/app/components/utils/successmodal";
+import { ValidateToken } from "@/app/api/session";
 
 export default function ManageCabinet() {
+    const router = useRouter();
     const initialFormData = {
         cabinetID: "",
-        cabinet: "",
         dataCenter: "",
         location: "",
         assignedTo: "",
@@ -28,45 +34,36 @@ export default function ManageCabinet() {
     const [zones, setZones] = useState([]);
     const [cabinetRows, setCabinetRows] = useState([]);
     const [cabinets, setCabinets] = useState([]);
+    const [sessionExpired, setSessionExpired] = useState(false);
+    const [showConfirmation, setShowConfirmation] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [successMessage, setSuccessMessage] = useState("");
+    const [actionType, setActionType] = useState("");
 
-    // Handle form input changes
-    const handleInputChange = (field, value) => {
-        setFormData((prev) => ({
-            ...prev,
-            [field]: value,
-        }));
-    };
-
-    // Handle form submission
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            // Perform the API call to submit the form data
-            const response = await fetch('/api/cabinets/add', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData),
-            });
-
-            const result = await response.json();
-            if (result.success) {
-                alert("Cabinet updated successfully!");
-            } else {
-                console.error("Error updating cabinet:", result.message);
-                alert("Failed to update cabinet.");
-            }
-        } catch (error) {
-            console.error("Error submitting form:", error);
-            alert("An error occurred during submission.");
+    useEffect(() => {
+        const token = localStorage.getItem('token')
+        if (!token) {
+            setSessionExpired(true);
+            return;
         }
-    };
 
-    // Fetch dropdown data for the form
+        const validateAndHandleExpiration = async () => {
+            try {
+                await ValidateToken(token);
+            } catch (error) {
+                localStorage.removeItem("token");
+                setSessionExpired(true);
+            }
+        };
+
+        validateAndHandleExpiration();
+    }, [router]);
+
     useEffect(() => {
         const fetchData = async () => {
             try {
+                setLoading(true);
                 const dropdowndata = await getRequiredData();
                 const datacenterOptions = dropdowndata.datacenters.map(dc => dc.Name);
                 const departmentOptions = ["General Use", ...dropdowndata.departments.map(dep => dep.Name)];
@@ -77,6 +74,7 @@ export default function ManageCabinet() {
                 setAssignedTos(departmentOptions);
                 setZones(zonesOptions);
                 setCabinetRows(cabinetRowsOptions);
+                setLoading(false);
             } catch (err) {
                 console.error("Error fetching cabinets data:", err);
             }
@@ -84,19 +82,120 @@ export default function ManageCabinet() {
         fetchData();
     }, []);
 
+    const handleModalClose = () => {
+        setSessionExpired(false);
+        router.push("/").then(() => {
+            router.reload();
+        });
+    };
+
+    const handleInputChange = (field, value) => {
+        setFormData((prev) => ({
+            ...prev,
+            [field]: value,
+        }));
+    };
+
+    const handleUpdate = async (e) => {
+        e.preventDefault();
+        setActionType("update");
+        setShowConfirmation(true); 
+    };
+
+    const handleDelete = async (e) => {
+        e.preventDefault();
+        setActionType("delete");
+        setShowConfirmation(true);
+    };
+
+    const handleClear = async () => {
+        setFormData(initialFormData);
+        setCabinets([]);
+    };
+
     const handleDataCenterChange = async (val) => {
         handleInputChange('dataCenter', val);
+        setLoading(true);
         try {
-            const fetchedCabinets = await getCabinetsByDataCenter(val);  // Fetch cabinets based on selected DataCenter
-            setCabinets(fetchedCabinets); // Set cabinet options based on selected DataCenter
+            const fetchedCabinets = await getCabinetsByDataCenter(val);
+            setCabinets(fetchedCabinets);
+            setLoading(false);
         } catch (error) {
             console.error("Error fetching cabinets by DataCenter:", error);
         }
     };
 
+    const handleCabinetChange = async (val) => {
+        const selectedCabinetID = val.split(' - ')[0];
+        handleInputChange("cabinetID", selectedCabinetID);
+        setLoading(true);
+
+        try {
+            const fetchedCabinetData = await getCabinetData(selectedCabinetID);
+            setFormData((prevData) => ({
+                ...prevData,
+                location: fetchedCabinetData.Location || prevData.location,
+                assignedTo: fetchedCabinetData.AssignedTo || "General Use",
+                zone: fetchedCabinetData.Zone || "N/A",
+                cabinetRow: fetchedCabinetData.CabinetRow || "N/A",
+                cabinetHeight: fetchedCabinetData.CabinetHeight || prevData.cabinetHeight,
+                u1Position: fetchedCabinetData.U1Position || prevData.u1Position,
+                model: fetchedCabinetData.Model || prevData.model,
+                keyLockInfo: fetchedCabinetData.KeyLockInfo || prevData.keyLockInfo,
+                maxKW: fetchedCabinetData.MaxKW || prevData.maxKW,
+                maxWeight: fetchedCabinetData.MaxWeight || prevData.maxWeight,
+                dateOfInstallation: fetchedCabinetData.DateOfInstallation.substring(0, 10) || prevData.dateOfInstallation,
+                notes: fetchedCabinetData.Notes || prevData.notes,
+            }));
+            setLoading(false);
+
+        } catch (error) {
+            console.error("Error fetching cabinet data:", error);
+        }
+    };
+
+    const handleConfirmSubmit = async () => {
+        setLoading(true);
+        try {
+            if (actionType === "update") {
+                const response = await updateCabinet(formData);
+                setSuccessMessage("Cabinet updated successfully!");
+            } else if (actionType === "delete") {
+                const response = await deleteCabinet(formData.cabinetID);
+                setSuccessMessage("Cabinet removed successfully!");
+            }
+            setLoading(false);
+            setShowConfirmation(false);
+            setShowSuccess(true);
+        } catch (error) {
+            console.error("Error:", error);
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="container p-5">
-            <form onSubmit={handleSubmit}>
+            <SessionTimeout show={sessionExpired} onClose={handleModalClose} />
+
+            <Confirmation
+                show={showConfirmation}
+                onClose={() => setShowConfirmation(false)}
+                onConfirm={handleConfirmSubmit}
+                message={actionType === "update" ? `Are you sure you want to update cabinet: ${formData.location}` : `Are you sure you want to remove cabinet: ${formData.location}`}
+            />
+
+            {loading && <Spinner />}
+
+            <SuccessModal
+                show={showSuccess}
+                message={successMessage}
+                onClose={() => {
+                    setShowSuccess(false);
+                    handleClear();
+                }}
+            />
+
+            <form onSubmit={handleUpdate}>
                 <div className="container-flex">
                     <h4>Update Cabinet</h4>
                     <div className="container-flex d-flex">
@@ -106,17 +205,26 @@ export default function ManageCabinet() {
                                 label="Select Data Center"
                                 options={dataCenters}
                                 value={formData.dataCenter}
-                                onChange={(val) => {
-                                    handleInputChange("dataCenter", val); 
-                                    handleDataCenterChange(val);       
-                                }}
+                                onChange={(val) => { handleDataCenterChange(val); }}
                             />
                             <FormInput
                                 type="dropdown"
                                 label="Select Cabinet"
                                 options={cabinets}
-                                value={formData.cabinet}
-                                onChange={(val) => handleInputChange("cabinet", val)}
+                                value={formData.cabinetID}
+                                onChange={(val) => {
+                                    const selectedCabinetID = val.split(' - ')[0];
+                                    handleInputChange("cabinetID", selectedCabinetID);
+                                    handleCabinetChange(selectedCabinetID);
+                                }}
+                            />
+                            <FormInput
+                                type="text"
+                                placeholder="Select Cabinet First"
+                                label="Cabinet/Location"
+                                options={cabinets}
+                                value={formData.location}
+                                onChange={(val) => { handleInputChange("location", val) }}
                             />
                             <FormInput
                                 type="dropdown"
@@ -195,11 +303,18 @@ export default function ManageCabinet() {
                     </div>
                 </div>
                 <div>
-                    <button type="submit" className="btn btn-primary mt-3">
-                        Update Cabinet
+                    <button type="submit" className="btn btn-primary m-1">
+                        Update
+                    </button>
+                    <button type="button" className="btn btn-danger m-1" onClick={handleDelete}>
+                        Remove
+                    </button>
+                    <button type="reset" className="btn btn-secondary m-1" onClick={handleClear}>
+                        Clear
                     </button>
                 </div>
             </form>
         </div>
     );
 }
+

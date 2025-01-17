@@ -4,11 +4,14 @@ import FormInput from "@/app/components/formcomponents/form_input/page";
 import { getDataCenters } from "@/app/api/datacenters";
 import { getCabinetsByDataCenter } from "@/app/api/cabinets";
 import { getManufacturers } from "@/app/api/manufacturers";
-import { getModelsByManufacturer, requestDeviceApproval, DirectImportBulk } from "@/app/api/devices";
+import { getModelsByManufacturer, DirectImportBulk, requestBulkDeviceApproval } from "@/app/api/devices";
 import ExcelUpload from "@/app/components/excelfileupload/page";
 import { getDepartments } from "@/app/api/departments";
 import { getPrimaryContacts } from "@/app/api/people";
 import RadioSwitch from "@/app/components/formcomponents/switch/radioswitch";
+import Confirmation from "@/app/components/utils/confirmationmodal";
+import Spinner from "@/app/components/utils/spinner";
+import SuccessModal from "@/app/components/utils/successmodal";
 
 export default function BulkImportDevices() {
     const initialData = {
@@ -31,6 +34,12 @@ export default function BulkImportDevices() {
     const [isCustomImport, setIsCustomImport] = useState(true);
     const [invalidRows, setInvalidRows] = useState([]);
     const [isValid, setIsValid] = useState(false);
+    const [showConfirmation, setShowConfirmation] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
+    const [actionType, setActionType] = useState('');
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -43,7 +52,7 @@ export default function BulkImportDevices() {
                 setDataCenters(datacenters.map((dc) => dc.Name, (dc) => dc.DataCenterID));
                 setManufacturers(manufacturers.map((mf) => mf.Name));
                 setOwnerOptions(owners.map((on) => on.Name));
-                setContactOptions(contacts.map((cn) => cn.UserID));
+                setContactOptions(contacts.map((cn) => cn[0]));
             } catch (err) {
                 console.error("Error fetching data:", err);
             }
@@ -80,6 +89,10 @@ export default function BulkImportDevices() {
         setImportedData(data);
     };
 
+    const handleClear = async () => {
+        setFormData(initialData);
+    };
+
     const handleSwitch = (isCustom) => {
         setIsCustomImport(!isCustom);
         setDropdownData({
@@ -105,8 +118,10 @@ export default function BulkImportDevices() {
                 let isValidCabinet = true;
                 if (dropdownData.DataCenter || item.DataCenter) {
                     const cabinets = await getCabinetsByDataCenter(dropdownData.DataCenter || item.DataCenter);
-                    isValidCabinet = cabinets.includes(dropdownData.Cabinet || item.Cabinet);
+                    const cabinetNames = cabinets.map(cabinet => cabinet.split(' - ')[1]);
+                    isValidCabinet = cabinetNames.includes(dropdownData.Cabinet.split(' - ')[1] || item.Cabinet);
                 }
+
 
                 let isValidModel = true;
                 if (dropdownData.Manufacturer || item.Manufacturer) {
@@ -139,13 +154,16 @@ export default function BulkImportDevices() {
         }
     };
 
-    const handleSubmit = async () => {
+    const handleSubmit = () => {
+        setShowConfirmation(true);
+    };
+
+    const handleConfirmSubmit = async () => {
+        setShowConfirmation(false); // Hide the confirmation modal
+        setLoading(true); // Show the spinner
+
         try {
-
             const userRole = localStorage.getItem("userRole");
-            console.log(userRole);
-
-            // Format the data as per the provided mapping
             const formattedData = importedData.map((item) => ({
                 dataCenter: dropdownData.DataCenter || item.DataCenter,
                 cabinet: dropdownData.Cabinet || item.Cabinet,
@@ -165,26 +183,49 @@ export default function BulkImportDevices() {
                 reservation: item.Reservation,
             }));
 
-            // Check if user role is Super-Admin or Admin
+            let result;
             if (userRole === "Super-Admin" || userRole === "Admin") {
-                const result = await DirectImportBulk(formattedData);
-                console.log('Devices imported successfully:', result);
-                alert('Devices imported successfully.');
+                result = await DirectImportBulk(formattedData);
+                setSuccessMessage('Devices imported successfully.');
             } else {
-                console.log('Sending approval request to server:', formattedData);
-                const result = await requestDeviceApproval(formattedData);
-                console.log('Approval request sent successfully:', result);
-                alert('Approval request sent to the Admin.');
+                result = await requestBulkDeviceApproval(formattedData);
+                setSuccessMessage('Approval request sent to the Admin.');
             }
 
+            console.log('Operation result:', result);
+            setLoading(false);
+            setShowSuccess(true);
+
         } catch (error) {
+            setLoading(false);
             console.error('Error during bulk import or approval request:', error.message);
             alert('Failed to send approval request: ' + (error.message || 'Unknown error'));
         }
     };
 
+
     return (
         <div className="container p-5">
+            <Confirmation
+                show={showConfirmation}
+                onClose={() => setShowConfirmation(false)}
+                onConfirm={handleConfirmSubmit}
+                message={actionType === "update"
+                    ? `Are you sure you want to update the cabinet: ${formData.location}?`
+                    : `Are you sure you want to import these devices?`}
+            />
+
+            {loading && <Spinner />}
+
+            <SuccessModal
+                show={showSuccess}
+                message={successMessage}
+                onClose={() => {
+                    setShowSuccess(false);
+                    handleClear();
+                }}
+            />
+
             <div className="col-xl-12 d-flex">
                 <h6 className="me-2">Switch to Easy Import:</h6>
                 <RadioSwitch onSwitch={handleSwitch} />
@@ -325,7 +366,7 @@ export default function BulkImportDevices() {
                             <ul>
                                 {invalidRows.map((invalidRow, index) => (
                                     <li key={index}>
-                                        <strong>{`Row ${index + 2}`}</strong>:
+                                        <strong>{`Row ${index + 1}`}</strong>:
                                         <ul>
                                             {invalidRow.errors.map((error, errIndex) => (
                                                 <li key={errIndex}>{error}</li>

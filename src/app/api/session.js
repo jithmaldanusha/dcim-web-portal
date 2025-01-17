@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export const WelcomeToDcim = async () => {
   try {
@@ -32,7 +32,6 @@ export const Login = async (username, password) => {
       username,
       password,
     });
-    console.log(response.data)
     return response.data;
 
   } catch (error) {
@@ -44,7 +43,7 @@ export const Login = async (username, password) => {
 export const Logout = async (userId) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/api/sessions/logout`, { userId });
-    return response.data; // Returns { success: true, message: "Logout successful." }
+    return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.error || "Error during logout.");
   }

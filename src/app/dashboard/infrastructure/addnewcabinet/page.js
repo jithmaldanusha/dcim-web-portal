@@ -1,10 +1,13 @@
 "use client"
 import { useEffect, useState } from "react";
 import FormInput from "@/app/components/formcomponents/form_input/page";
-import { addNewCabinet, getRequiredData } from "@/app/api/cabinets";
+import { addNewCabinet, getRequiredData, requestAddCabinetApproval } from "@/app/api/cabinets";
 import { useRouter } from "next/navigation";
 import { ValidateToken } from "@/app/api/session";
 import SessionTimeout from "@/app/components/utils/sessiontimeout";
+import Confirmation from "@/app/components/utils/confirmationmodal";
+import Spinner from "@/app/components/utils/spinner";
+import SuccessModal from "@/app/components/utils/successmodal";
 
 export default function AddNewCabinets() {
     const router = useRouter();
@@ -29,6 +32,10 @@ export default function AddNewCabinets() {
     const [zones, setZones] = useState([]);
     const [cabinetRows, setCabinetRows] = useState([]);
     const [sessionExpired, setSessionExpired] = useState(false);
+    const [showConfirmation, setShowConfirmation] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [successMessage, setSuccessMessage] = useState("");
 
     useEffect(() => {
         const token = localStorage.getItem('token')
@@ -54,9 +61,9 @@ export default function AddNewCabinets() {
             try {
                 const dropdowndata = await getRequiredData();
                 const datacenterOptions = dropdowndata.datacenters.map(dc => dc.Name);
-                const departmentOptions = ["General Use", ...dropdowndata.departments.map(dc => dc.Name)];
-                const zonesOptions = ["N/A", ...dropdowndata.zones.map(dc => dc.Description)];
-                const cabinetRowsOptions = ["N/A", ...dropdowndata.cabinetRows.map(dc => dc.Name)];
+                const departmentOptions = [...dropdowndata.departments.map(dc => dc.Name)];
+                const zonesOptions = [...dropdowndata.zones.map(dc => dc.Description)];
+                const cabinetRowsOptions = [...dropdowndata.cabinetRows.map(dc => dc.Name)];
 
                 setDataCenters(datacenterOptions);
                 setAssignedTos(departmentOptions);
@@ -87,29 +94,74 @@ export default function AddNewCabinets() {
     const handleClear = () => {
         setFormData(initialFormData);
     };
+    const handleConfirmSubmit = () => {
+        setShowConfirmation(false);
+        handleSubmit();
+    };
 
-    const handleSubmit = async (e) => {
+    const handleFormSubmit = (e) => {
         e.preventDefault();
+        setShowConfirmation(true);
+    };
+
+    const handleSubmit = async () => {
+        setLoading(true);
+        const userRole = localStorage.getItem("userRole");
 
         const { dataCenter, assignedTo, zone, cabinetRow, location, dateOfInstallation } = formData;
         if (!dataCenter || !assignedTo || !zone || !cabinetRow || !location || !dateOfInstallation) {
-            alert("Please ensure all the Required fields are entered");
+            alert("Please ensure all the required fields are entered");
+            setLoading(false);
             return;
         }
 
         try {
-            const response = await addNewCabinet(formData);
-            console.log("New cabinet added successfully:", response);
+            let response;
+            if (userRole === "Super-Admin" || userRole === "Admin") {
+                response = await addNewCabinet(formData);
+            } else {
+                alert("You don't have permission perform this task. An admin approval is required");
+                response = await requestAddCabinetApproval(formData);
+            }
+
+            if (response) {
+                setSuccessMessage(response.message);
+                setShowSuccess(true);
+            } else {
+                alert("There was an issue processing your request.");
+            }
+
         } catch (error) {
             console.error("Error submitting the form:", error);
             alert("There was an error adding the new cabinet. Please try again.");
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
         <div className="container p-5">
             <SessionTimeout show={sessionExpired} onClose={handleModalClose} />
-            <form onSubmit={handleSubmit}>
+
+            <Confirmation
+                show={showConfirmation}
+                onClose={() => setShowConfirmation(false)}
+                onConfirm={handleConfirmSubmit}
+                message={`Are you sure you want to add new cabinet: ${formData.location}`}
+            />
+
+            {loading && <Spinner />}
+
+            <SuccessModal
+                show={showSuccess}
+                message={successMessage}
+                onClose={() => {
+                    setShowSuccess(false);
+                    handleClear();
+                }}
+            />
+            
+            <form onSubmit={handleFormSubmit}>
                 <div className="container-flex">
                     <h4>Add New Cabinet</h4>
                     <div className="container-flex d-flex">
@@ -207,6 +259,7 @@ export default function AddNewCabinets() {
                         <button type="submit" className="btn btn-primary m-1">Add Cabinet</button>
                         <button type="button" className="btn btn-secondary" onClick={handleClear}>Clear</button>
                     </div>
+
                 </div>
             </form>
         </div>

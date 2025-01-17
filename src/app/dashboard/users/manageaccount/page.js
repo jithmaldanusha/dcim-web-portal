@@ -1,33 +1,38 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { updateUsernameAPI, updateEmailAPI, updatePasswordAPI, updateRoleAPI, getAllUsers, fetchUserData } from "@/app/api/useraccounts";
+import { updateUsernameAPI, updateEmailAPI, updatePasswordAPI, updateRoleAPI, fetchUserData, updateEmailPassAPI } from "@/app/api/useraccounts";
 import FormInput from "@/app/components/formcomponents/form_input/page";
 import Confirmation from "@/app/components/utils/confirmationmodal";
+import { Logout } from "@/app/api/session";
 
 export default function ManageAccount() {
     const router = useRouter();
-    const [userID, setUserId] = useState();
-    const [userRole, setUserRole] = useState();
-    const [userEmail, setUserEmail] = useState();
     const [message, setConfirmationMessage] = useState();
     const [showConfirmation, setShowConfirmation] = useState(false);
     const [confirmationAction, setConfirmationAction] = useState(null);
     const [feedback, setFeedback] = useState("");
+    const [userData, setUserData] = useState({
+        userId: "",
+        email: "",
+        role: "",
+        emailPass: ""
+    });
+
 
     useEffect(() => {
-        // Fetch local storage values directly
         const storedUserId = localStorage.getItem("user");
-        const storedUserRole = localStorage.getItem("userRole");
-
-        setUserId(storedUserId);
-        setUserRole(storedUserRole);
 
         const getUser = async () => {
             try {
                 if (storedUserId) {
                     const response = await fetchUserData(storedUserId);
-                    setUserEmail(response.data.Email);
+                    setUserData({
+                        userId: response.data.UserID,
+                        email: response.data.Email,
+                        role: response.data.Role,
+                        emailPass: response.data.EmailPass
+                    });
                 } else {
                     console.error("User ID not found in localStorage.");
                 }
@@ -38,9 +43,11 @@ export default function ManageAccount() {
         getUser();
     }, []);
 
+
     const [formData, setFormData] = useState({
         newUserId: "",
         newUserEmail: "",
+        newUserEmailPass: "",
         currentPassword: "",
         newPassword: "",
         confirmNewPassword: "",
@@ -71,19 +78,34 @@ export default function ManageAccount() {
 
     const updateUsername = async () => {
         try {
-            const response = await updateUsernameAPI(formData.newUserId, userID);
+            const response = await updateUsernameAPI(formData.newUserId, userData.userId);
             setFeedback(response.message || "Username updated successfully!");
+            if (response) {
+                await Logout(userData.userId);
+                localStorage.removeItem("token");
+                window.location.href = '/';
+            }
         } catch (error) {
             setFeedback(error.message || "Error updating username.");
         }
     };
 
+
     const updateEmail = async () => {
         try {
-            const response = await updateEmailAPI(formData.newUserEmail, userID);
-            setFeedback(response.message || "Username updated successfully!");
+            const response = await updateEmailAPI(formData.newUserEmail, userData.userId);
+            setFeedback(response.message || "Email updated successfully!");
         } catch (error) {
-            setFeedback(error.message || "Error updating username.");
+            setFeedback(error.message || "Error updating Email.");
+        }
+    };
+
+    const updateEmailPass = async () => {
+        try {
+            const response = await updateEmailPassAPI(formData.newUserEmailPass, userData.userId);
+            setFeedback(response.message || "Email password updated successfully!");
+        } catch (error) {
+            setFeedback(error.message || "Error updating email password.");
         }
     };
 
@@ -92,21 +114,11 @@ export default function ManageAccount() {
             setFeedback("Passwords do not match.");
             return;
         }
-
         try {
-            const response = await updatePasswordAPI(formData.currentPassword, formData.newPassword, userID);
+            const response = await updatePasswordAPI(formData.currentPassword, formData.newPassword, userData.userId);
             setFeedback(response.message || "Password updated successfully!");
         } catch (error) {
             setFeedback(error.message || "Error updating password.");
-        }
-    };
-
-    const updateRole = async () => {
-        try {
-            const response = await updateRoleAPI(formData.newRole, userID);
-            setFeedback(response.message || "Role updated successfully!");
-        } catch (error) {
-            setFeedback(error.message || "Error updating role.");
         }
     };
 
@@ -120,90 +132,115 @@ export default function ManageAccount() {
                 onConfirm={handleConfirmOk}
                 message={message}
             />
-            <h3>Manage Account</h3>
 
-            {/* Display current username and role */}
-            <FormInput type="text" label="Username" value={userID} disabled />
-            <FormInput type="text" label="Role" value={userRole} disabled />
-
+            <div className="container">
+                <table className="table">
+                    <thead>
+                        <tr>
+                            <th>ID(Username)</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Email Password Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>{userData.userId}</td>
+                            <td>{userData.email ? userData.email : "Not provided"}</td>
+                            <td>{userData.role}</td>
+                            <td>
+                                <span style={{ color: userData.emailPass ? 'green' : 'red' }}>
+                                    {userData.emailPass ? "Set" : "Not Set"}
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
             <hr />
+            <div className="mt-4">
+                <h5>Manage Credentials</h5>
+                <div className="d-flex mt-1">
+                    <FormInput
+                        type="text"
+                        label="Edit Username"
+                        placeholder="Enter new username"
+                        value={formData.newUserId}
+                        onChange={(val) => handleInputChange("newUserId", val)}
+                    />
+                    <button
+                        className="btn btn-primary h-75 m-4 p-2"
+                        onClick={() => showConfirmationModal(
+                            () => updateUsername(),
+                            `Are you sure you want to change the username to: '${formData.newUserId}'? 
+                            You will be logged out of dcim once the username is changed.`
+                        )}
+                    >
+                        Update Username
+                    </button>
 
-            <div className="d-flex">
+                </div>
+
+                {/* Update Password */}
                 <FormInput
                     type="text"
-                    label="Edit Username"
-                    placeholder="Enter new username"
-                    value={formData.newUserId}
-                    onChange={(val) => handleInputChange("newUserId", val)}
+                    label="Enter Current Password"
+                    value={formData.currentPassword}
+                    onChange={(val) => handleInputChange("currentPassword", val)}
                 />
-                <button
-                    className="btn btn-primary h-75 m-4 p-2"
-                    onClick={() => showConfirmationModal(() => updateUsername(), `Are you sure you want to change the username to: ${formData.newUserId}?`)}
-                >
-                    Update Username
-                </button>
-
                 <FormInput
                     type="text"
-                    label="Edit Email"
-                    placeholder="Enter new E-mail"
-                    value={userEmail}
-                    onChange={(val) => handleInputChange("newUserEmail", val)}
+                    label="Enter New Password"
+                    value={formData.newPassword}
+                    onChange={(val) => handleInputChange("newPassword", val)}
                 />
-                <button
-                    className="btn btn-primary h-75 m-4 p-2"
-                    onClick={() => showConfirmationModal(() => updateEmail(), `Are you sure you want to change the email: ${formData.newUserEmail}?`)}
-                >
-                    Update Email
-                </button>
-            </div>
-
-            <hr />
-
-            {/* Update Password */}
-            <FormInput
-                type="text"
-                label="Enter Current Password"
-                value={formData.currentPassword}
-                onChange={(val) => handleInputChange("currentPassword", val)}
-            />
-            <FormInput
-                type="text"
-                label="Enter New Password"
-                value={formData.newPassword}
-                onChange={(val) => handleInputChange("newPassword", val)}
-            />
-            <FormInput
-                type="text"
-                label="Confirm New Password"
-                value={formData.confirmNewPassword}
-                onChange={(val) => handleInputChange("confirmNewPassword", val)}
-            />
-            <button
-                className="btn btn-primary"
-                onClick={() => showConfirmationModal(() => updatePassword(), "Are you sure you want to update the password?")}
-            >
-                Update Password
-            </button>
-
-            <hr />
-
-            {/* Update Role */}
-            <div className="d-flex">
                 <FormInput
-                    type="dropdown"
-                    label="Select New Role"
-                    options={["Admin", "User"]}
-                    value={formData.newRole}
-                    onChange={(val) => handleInputChange("newRole", val)}
+                    type="text"
+                    label="Confirm New Password"
+                    value={formData.confirmNewPassword}
+                    onChange={(val) => handleInputChange("confirmNewPassword", val)}
                 />
                 <button
-                    className="btn btn-primary h-75 m-4 p-2"
-                    onClick={() => showConfirmationModal(() => updateRole(), `Are you sure you want to change the role to: ${formData.newRole}?`)}
+                    className="btn btn-primary"
+                    onClick={() => showConfirmationModal(() => updatePassword(), "Are you sure you want to update the password?")}
                 >
-                    Update Role
+                    Update Password
                 </button>
             </div>
+            <hr />
+            <div className="mt-4">
+                <h5>Email Configuration</h5>
+                <div className="d-flex mt-1">
+                    <FormInput
+                        type="text"
+                        label="Edit Email"
+                        placeholder="Enter new email"
+                        value={userData.email}
+                        onChange={(val) => handleInputChange("newUserEmail", val)}
+                    />
+                    <button
+                        className="btn btn-primary h-75 m-4 p-2"
+                        onClick={() => showConfirmationModal(() => updateEmail(), `Are you sure you want to change the email to: '${formData.newUserEmail}'?`)}
+                    >
+                        Update Email
+                    </button>
+                </div>
+                <div className="d-flex mt-1">
+                    <FormInput
+                        type="password"
+                        label="Set Email Password"
+                        placeholder="Enter new password"
+                        onChange={(val) => handleInputChange("newUserEmailPass", val)}
+                    />
+                    <button
+                        className="btn btn-primary h-75 m-4 p-2"
+                        onClick={() => showConfirmationModal(() => updateEmailPass(), `Are you sure you want to set the password as: '${formData.newUserEmailPass}'?`)}
+                    >
+                        Update Email Password
+                    </button>
+                </div>
+            </div>
+
 
         </section>
     );
