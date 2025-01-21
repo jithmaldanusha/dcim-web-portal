@@ -95,9 +95,9 @@ export const DirectImportBulk = async (data) => {
     }
 };
 
-export const requestDeviceAddApproval = async (data) => {
+export const requestDeviceAddApproval = async (data, userId) => {
     try {
-        const response = await axios.post(`${API_BASE_URL}/api/devices/deviceAddApproval`, { data });
+        const response = await axios.post(`${API_BASE_URL}/api/devices/deviceAddApproval`, { data, userId });
         return response.data;
     } catch (error) {
         console.error('Error requesting approval:', error.message);
@@ -105,9 +105,9 @@ export const requestDeviceAddApproval = async (data) => {
     }
 };
 
-export const requestDeviceUpdateApproval = async (data) => {
+export const requestDeviceRemoveApproval = async (deviceId, userId) => {
     try {
-        const response = await axios.post(`${API_BASE_URL}/api/devices/deviceUpdateApproval`, { data });
+        const response = await axios.post(`${API_BASE_URL}/api/devices/deviceRemoveApproval`, { deviceId, userId });
         return response.data;
     } catch (error) {
         console.error('Error requesting approval:', error.message);
@@ -115,20 +115,9 @@ export const requestDeviceUpdateApproval = async (data) => {
     }
 };
 
-export const requestDeviceRemoveApproval = async (data) => {
+export const requestBulkDeviceApproval = async (data, userId) => {
     try {
-        const response = await axios.post(`${API_BASE_URL}/api/devices/deviceRemoveApproval`, { data });
-        return response.data;
-    } catch (error) {
-        console.error('Error requesting approval:', error.message);
-        throw error;
-    }
-};
-
-export const requestBulkDeviceApproval = async (data) => {
-    try {
-        console.log(data)
-        const response = await axios.post(`${API_BASE_URL}/api/devices/bulkDeviceApproval`, { data });
+        const response = await axios.post(`${API_BASE_URL}/api/devices/bulkDeviceApproval`, { data, userId });
         return response.data;
     } catch (error) {
         console.error('Error requesting approval:', error.message);

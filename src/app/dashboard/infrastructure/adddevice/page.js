@@ -137,7 +137,9 @@ export default function AddNewDevice() {
 
     const handleSubmit = async () => {
         setLoading(true);
+        const userId = localStorage.getItem("user");
         const userRole = localStorage.getItem("userRole");
+
         const { dataCenter, location, owner, label, installDate } = formData;
         if (!dataCenter || !location || !owner || !label || !installDate) {
             alert("Please ensure all the required fields are entered");
@@ -151,7 +153,7 @@ export default function AddNewDevice() {
                 response = await AddDevice(formData);
             } else {
                 alert("You don't have permission perform this task. An admin approval is required");
-                response = await requestDeviceAddApproval(formData);
+                response = await requestDeviceAddApproval(formData, userId);
             }
 
             if (response) {
@@ -163,7 +165,7 @@ export default function AddNewDevice() {
 
         } catch (error) {
             console.error("Error submitting the form:", error);
-            alert("There was an error adding the new device. Please try again.");
+            alert("There was an error occured. Contact Admin");
         } finally {
             setLoading(false);
         }
@@ -177,7 +179,7 @@ export default function AddNewDevice() {
                 show={showConfirmation}
                 onClose={() => setShowConfirmation(false)}
                 onConfirm={handleConfirmSubmit}
-                message={`Are you sure you want to add new cabinet: ${formData.location}`}
+                message={`Are you sure you want to add new Device: ${formData.label}`}
             />
 
             {loading && <Spinner />}

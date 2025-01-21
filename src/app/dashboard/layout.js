@@ -18,8 +18,8 @@ const geistMono = localFont({
 });
 
 export const metadata = {
-  title: "Dashboard",
-  description: "Dashboard",
+  title: "IDC Infrastructure Manager",
+  description: "",
 };
 
 export default function DashLayout({ children }) {

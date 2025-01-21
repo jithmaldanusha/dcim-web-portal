@@ -92,9 +92,19 @@ export const deleteCabinet = async (cabinetID) => {
     }
 };
 
-export const requestAddCabinetApproval = async (data) => {
+export const requestAddCabinetApproval = async (data, userId) => {
     try {
-        const response = await axios.post(`${API_BASE_URL}/api/cabinets/requestAddApproval`, { data });
+        const response = await axios.post(`${API_BASE_URL}/api/cabinets/requestAddApproval`, { data, userId });
+        return response.data;
+    } catch (error) {
+        console.error('Error requesting approval:', error.message);
+        throw error;
+    }
+};
+
+export const requestDeleteCabinetApproval = async (cabinetID, userId) => {
+    try {
+        const response = await axios.post(`${API_BASE_URL}/api/cabinets/requestDeleteApproval`, { cabinetID, userId });
         return response.data;
     } catch (error) {
         console.error('Error requesting approval:', error.message);

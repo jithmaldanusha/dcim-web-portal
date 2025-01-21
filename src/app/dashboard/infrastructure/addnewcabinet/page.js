@@ -8,6 +8,7 @@ import SessionTimeout from "@/app/components/utils/sessiontimeout";
 import Confirmation from "@/app/components/utils/confirmationmodal";
 import Spinner from "@/app/components/utils/spinner";
 import SuccessModal from "@/app/components/utils/successmodal";
+import { checkUserMail } from "@/app/api/useraccounts";
 
 export default function AddNewCabinets() {
     const router = useRouter();
@@ -62,8 +63,8 @@ export default function AddNewCabinets() {
                 const dropdowndata = await getRequiredData();
                 const datacenterOptions = dropdowndata.datacenters.map(dc => dc.Name);
                 const departmentOptions = [...dropdowndata.departments.map(dc => dc.Name)];
-                const zonesOptions = [...dropdowndata.zones.map(dc => dc.Description)];
-                const cabinetRowsOptions = [...dropdowndata.cabinetRows.map(dc => dc.Name)];
+                const zonesOptions = ["N/A", ...dropdowndata.zones.map(dc => dc.Description)];
+                const cabinetRowsOptions = ["N/A", ...dropdowndata.cabinetRows.map(dc => dc.Name)];
 
                 setDataCenters(datacenterOptions);
                 setAssignedTos(departmentOptions);
@@ -106,9 +107,12 @@ export default function AddNewCabinets() {
 
     const handleSubmit = async () => {
         setLoading(true);
+        const userId = localStorage.getItem("user");
         const userRole = localStorage.getItem("userRole");
 
         const { dataCenter, assignedTo, zone, cabinetRow, location, dateOfInstallation } = formData;
+
+        // Check if all the required fields are filled
         if (!dataCenter || !assignedTo || !zone || !cabinetRow || !location || !dateOfInstallation) {
             alert("Please ensure all the required fields are entered");
             setLoading(false);
@@ -116,12 +120,21 @@ export default function AddNewCabinets() {
         }
 
         try {
+            // Check if the user's email is set up
+            const userMail = await checkUserMail(userId);
+            if (!userMail.Email) {
+                alert("You need to set up your email address in your account before proceeding.");
+                setLoading(false);
+                return;
+            }
+
             let response;
+            // If the user is an admin, allow cabinet addition, otherwise request approval
             if (userRole === "Super-Admin" || userRole === "Admin") {
                 response = await addNewCabinet(formData);
             } else {
-                alert("You don't have permission perform this task. An admin approval is required");
-                response = await requestAddCabinetApproval(formData);
+                alert("You don't have permission to perform this task. An admin approval is required.");
+                response = await requestAddCabinetApproval(formData, userId);
             }
 
             if (response) {
@@ -133,11 +146,12 @@ export default function AddNewCabinets() {
 
         } catch (error) {
             console.error("Error submitting the form:", error);
-            alert("There was an error adding the new cabinet. Please try again.");
+            alert("There was an error performing the task. Please try again.");
         } finally {
             setLoading(false);
         }
     };
+
 
     return (
         <div className="container p-5">
@@ -160,7 +174,7 @@ export default function AddNewCabinets() {
                     handleClear();
                 }}
             />
-            
+
             <form onSubmit={handleFormSubmit}>
                 <div className="container-flex">
                     <h4>Add New Cabinet</h4>

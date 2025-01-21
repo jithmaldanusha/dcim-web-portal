@@ -75,7 +75,7 @@ const AddCabinetWindow = () => {
       });
 
       alert('Cabinet request rejected.');
-      window.close(); // Close the addnewcabinet page
+      window.close();
     } catch (error) {
       console.error('Error rejecting cabinet request:', error);
       alert('Error rejecting cabinet request: ' + error.message);

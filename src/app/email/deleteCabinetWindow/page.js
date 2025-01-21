@@ -4,10 +4,10 @@ import axios from 'axios';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-const AddBulkDevicesWindow = () => {
+const DeleteCabinetWindow = () => {
     const [requestStatus, setRequestStatus] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [deviceData, setDeviceData] = useState([]);
+    const [formData, setFormData] = useState({});
     const [requestID, setRequestID] = useState(null);
 
     useEffect(() => {
@@ -15,23 +15,14 @@ const AddBulkDevicesWindow = () => {
         const reqID = urlParams.get('requestID');
         setRequestID(reqID);
 
-        // Extract devices from the URL parameters
-        const devices = [];
-        let deviceIndex = 0;
+        const data = {};
+        urlParams.forEach((value, key) => {
+            if (key !== 'requestID') {
+                data[key] = value;
+            }
+        });
 
-        while (urlParams.has(`devices[${deviceIndex}][model]`)) {
-            const device = {};
-            urlParams.forEach((value, key) => {
-                const deviceMatch = key.match(new RegExp(`devices\\[${deviceIndex}\\]\\[(.*)\\]`));
-                if (deviceMatch) {
-                    device[deviceMatch[1]] = value;
-                }
-            });
-            devices.push(device);
-            deviceIndex++;
-        }
-
-        setDeviceData(devices);
+        setFormData(data);
 
         const checkRequestStatus = async () => {
             try {
@@ -57,11 +48,13 @@ const AddBulkDevicesWindow = () => {
 
     const handleApprove = async () => {
         try {
-            const response = await axios.post(`${API_BASE_URL}/api/devices/bulkImport`, { data: deviceData });
+            const { cabinetID } = formData;
+            console.log(cabinetID)
+            const response = await axios.delete(`${API_BASE_URL}/api/cabinets/deleteCabinet/${cabinetID}`);
             const result = response.data;
 
-            if (result) {
-                alert(result.message);
+            if (result.success) {
+                alert('Cabinet approved and deleted successfully!');
 
                 await axios.post(`${API_BASE_URL}/api/requests/updateStatus/${requestID}`, {
                     status: 'Approved',
@@ -69,13 +62,14 @@ const AddBulkDevicesWindow = () => {
 
                 window.close();
             } else {
-                alert('Error approving devices: ' + result.error);
+                alert('Error approving cabinet: ' + result.error);
             }
         } catch (error) {
-            console.error('Error approving devices:', error);
-            alert('Error approving devices: ' + error.message);
+            console.error('Error approving cabinet:', error);
+            alert('Error approving cabinet: ' + error.message);
         }
     };
+
 
     const handleReject = async () => {
         try {
@@ -83,14 +77,13 @@ const AddBulkDevicesWindow = () => {
                 status: 'Rejected',
             });
 
-            alert('Device request rejected.');
+            alert('Cabinet request rejected.');
             window.close();
         } catch (error) {
-            console.error('Error rejecting device request:', error);
-            alert('Error rejecting device request: ' + error.message);
+            console.error('Error rejecting cabinet request:', error);
+            alert('Error rejecting cabinet request: ' + error.message);
         }
     };
-
     if (isLoading) {
         return (
             <div className="container mt-5 text-center">
@@ -109,43 +102,19 @@ const AddBulkDevicesWindow = () => {
 
     return (
         <div className="container mt-5">
-            <h4 className="mb-4">New Bulk Device request {`(RequestID: ${requestID})`}</h4>
-            <table className="table table-bordered overflow-scroll">
+            <h4 className="mb-4">Remove Cabinet request {`(RequestID: ${requestID})`}</h4>
+            <table className="table table-bordered">
                 <thead>
                     <tr>
                         <th>Data Center</th>
-                        <th>Cabinet</th>
-                        <th>Manufacturer</th>
-                        <th>Model</th>
-                        <th>Owner</th>
-                        <th>Primary Contact</th>
-                        <th>Position</th>
-                        <th>Label</th>
-                        <th>Hostname</th>
-                        <th>Serial Number</th>
-                        <th>Asset Tag</th>
-                        <th>Install Date</th>
-                        <th>Reservation</th>
+                        <th>Location</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {deviceData.map((device, index) => (
-                        <tr key={index}>
-                            <td>{device.dataCenter}</td>
-                            <td>{device.cabinet.split(' - ')[1]}</td>
-                            <td>{device.manufacturer}</td>
-                            <td>{device.model}</td>
-                            <td>{device.owner}</td>
-                            <td>{device.primaryContact}</td>
-                            <td>{device.position}</td>
-                            <td>{device.label}</td>
-                            <td>{device.hostname}</td>
-                            <td>{device.serialNo}</td>
-                            <td>{device.assetTag}</td>
-                            <td>{device.installDate}</td>
-                            <td>{device.reservation}</td>
-                        </tr>
-                    ))}
+                    <tr>
+                        <td>{formData.datacenter}</td>
+                        <td>{formData.location}</td>
+                    </tr>
                 </tbody>
             </table>
 
@@ -161,4 +130,4 @@ const AddBulkDevicesWindow = () => {
     );
 };
 
-export default AddBulkDevicesWindow;
+export default DeleteCabinetWindow;

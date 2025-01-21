@@ -1,5 +1,5 @@
 "use client";
-import { deleteCabinet, getCabinetData, getCabinetsByDataCenter, getRequiredData, updateCabinet } from "@/app/api/cabinets";
+import { deleteCabinet, getCabinetData, getCabinetsByDataCenter, getRequiredData, requestDeleteCabinetApproval, updateCabinet } from "@/app/api/cabinets";
 import FormInput from "@/app/components/formcomponents/form_input/page";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -8,6 +8,7 @@ import Confirmation from "@/app/components/utils/confirmationmodal";
 import Spinner from "@/app/components/utils/spinner";
 import SuccessModal from "@/app/components/utils/successmodal";
 import { ValidateToken } from "@/app/api/session";
+import { checkUserMail } from "@/app/api/useraccounts";
 
 export default function ManageCabinet() {
     const router = useRouter();
@@ -99,7 +100,7 @@ export default function ManageCabinet() {
     const handleUpdate = async (e) => {
         e.preventDefault();
         setActionType("update");
-        setShowConfirmation(true); 
+        setShowConfirmation(true);
     };
 
     const handleDelete = async (e) => {
@@ -156,17 +157,50 @@ export default function ManageCabinet() {
 
     const handleConfirmSubmit = async () => {
         setLoading(true);
+        const userId = localStorage.getItem("user");
+        const userRole = localStorage.getItem("userRole");
         try {
+            // Check if the user's email is set up
+            const userMail = await checkUserMail(userId);
+            if (!userMail.Email) {
+                alert("You need to set up your email address in your account before proceeding.");
+                setLoading(false);
+                return;
+            }
+
             if (actionType === "update") {
                 const response = await updateCabinet(formData);
-                setSuccessMessage("Cabinet updated successfully!");
+                if (response) {
+                    setSuccessMessage("Cabinet updated successfully!");
+                    setLoading(false);
+                    setShowConfirmation(false);
+                    setShowSuccess(true);
+                }
+
+
             } else if (actionType === "delete") {
-                const response = await deleteCabinet(formData.cabinetID);
-                setSuccessMessage("Cabinet removed successfully!");
+
+                if (userRole === "Super-Admin" || userRole === "Admin") {
+                    const response = await deleteCabinet(formData.cabinetID);
+                    if (response) {
+                        setSuccessMessage("Cabinet removed successfully!");
+                        setLoading(false);
+                        setShowConfirmation(false);
+                        setShowSuccess(true);
+                    }
+
+                } else {
+                    alert("You don't have permission to perform this task. An admin approval is required.");
+                    const response = await requestDeleteCabinetApproval(formData.cabinetID, userId);
+                    if (response) {
+                        setLoading(false);
+                        setShowConfirmation(false);
+                        setSuccessMessage("Email Sent successfully!");
+                        setShowSuccess(true);
+                    }
+                }
             }
-            setLoading(false);
-            setShowConfirmation(false);
-            setShowSuccess(true);
+
         } catch (error) {
             console.error("Error:", error);
             setLoading(false);

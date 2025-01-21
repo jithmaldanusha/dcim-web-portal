@@ -4,10 +4,10 @@ import axios from 'axios';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-const AddBulkDevicesWindow = () => {
+const AddNewDeviceWindow = () => {
     const [requestStatus, setRequestStatus] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [deviceData, setDeviceData] = useState([]);
+    const [deviceData, setFormData] = useState({});
     const [requestID, setRequestID] = useState(null);
 
     useEffect(() => {
@@ -15,24 +15,15 @@ const AddBulkDevicesWindow = () => {
         const reqID = urlParams.get('requestID');
         setRequestID(reqID);
 
-        // Extract devices from the URL parameters
-        const devices = [];
-        let deviceIndex = 0;
+        const data = {};
+        urlParams.forEach((value, key) => {
+            if (key !== 'requestID') {
+                data[key] = value;
+            }
+        });
 
-        while (urlParams.has(`devices[${deviceIndex}][model]`)) {
-            const device = {};
-            urlParams.forEach((value, key) => {
-                const deviceMatch = key.match(new RegExp(`devices\\[${deviceIndex}\\]\\[(.*)\\]`));
-                if (deviceMatch) {
-                    device[deviceMatch[1]] = value;
-                }
-            });
-            devices.push(device);
-            deviceIndex++;
-        }
-
-        setDeviceData(devices);
-
+        setFormData(data);
+        console.log(data)
         const checkRequestStatus = async () => {
             try {
                 const response = await axios.get(`${API_BASE_URL}/api/requests/getStatus/${reqID}`);
@@ -57,7 +48,7 @@ const AddBulkDevicesWindow = () => {
 
     const handleApprove = async () => {
         try {
-            const response = await axios.post(`${API_BASE_URL}/api/devices/bulkImport`, { data: deviceData });
+            const response = await axios.post(`${API_BASE_URL}/api/devices/addDevice`, deviceData);
             const result = response.data;
 
             if (result) {
@@ -109,7 +100,7 @@ const AddBulkDevicesWindow = () => {
 
     return (
         <div className="container mt-5">
-            <h4 className="mb-4">New Bulk Device request {`(RequestID: ${requestID})`}</h4>
+            <h4 className="mb-4">New Device request {`(RequestID: ${requestID})`}</h4>
             <table className="table table-bordered overflow-scroll">
                 <thead>
                     <tr>
@@ -129,23 +120,21 @@ const AddBulkDevicesWindow = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {deviceData.map((device, index) => (
-                        <tr key={index}>
-                            <td>{device.dataCenter}</td>
-                            <td>{device.cabinet.split(' - ')[1]}</td>
-                            <td>{device.manufacturer}</td>
-                            <td>{device.model}</td>
-                            <td>{device.owner}</td>
-                            <td>{device.primaryContact}</td>
-                            <td>{device.position}</td>
-                            <td>{device.label}</td>
-                            <td>{device.hostname}</td>
-                            <td>{device.serialNo}</td>
-                            <td>{device.assetTag}</td>
-                            <td>{device.installDate}</td>
-                            <td>{device.reservation}</td>
-                        </tr>
-                    ))}
+                    <tr>
+                        <td>{deviceData.dataCenter}</td>
+                        <td>{deviceData.location}</td>
+                        <td>{deviceData.manufacturer}</td>
+                        <td>{deviceData.model}</td>
+                        <td>{deviceData.owner}</td>
+                        <td>{deviceData.primaryContact}</td>
+                        <td>{deviceData.position}</td>
+                        <td>{deviceData.label}</td>
+                        <td>{deviceData.hostname}</td>
+                        <td>{deviceData.serialNo}</td>
+                        <td>{deviceData.assetTag}</td>
+                        <td>{deviceData.installDate}</td>
+                        <td>{deviceData.reservation}</td>
+                    </tr>
                 </tbody>
             </table>
 
@@ -161,4 +150,4 @@ const AddBulkDevicesWindow = () => {
     );
 };
 
-export default AddBulkDevicesWindow;
+export default AddNewDeviceWindow;

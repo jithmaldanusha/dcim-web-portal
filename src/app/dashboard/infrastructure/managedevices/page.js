@@ -184,7 +184,9 @@ export default function ManageDevices() {
 
     const handleSubmit = async () => {
         setLoading(true);
+        const userId = localStorage.getItem("user");
         const userRole = localStorage.getItem("userRole");
+
         const { dataCenter, location, label, installDate } = formData;
         if (!dataCenter || !location || !label || !installDate) {
             alert("Please ensure all the required fields are entered");
@@ -193,15 +195,11 @@ export default function ManageDevices() {
         }
 
         try {
+            const deviceId = formData.selectedlabel.split(' - ')[0]
+
             if (actionType == "update") {
                 let response;
-                if (userRole === "Super-Admin" || userRole === "Admin") {
-                    const deviceId = formData.selectedlabel.split(' - ')[0]
-                    response = await UpdateDevice(formData, deviceId);
-                } else {
-                    alert("You don't have permission perform this task. An admin approval is required");
-                    response = await requestDeviceUpdateApproval(formData);
-                }
+                response = await UpdateDevice(formData, deviceId);
 
                 if (response) {
                     setSuccessMessage(response.message);
@@ -218,7 +216,7 @@ export default function ManageDevices() {
                     response = await deleteDevice(deviceId);
                 } else {
                     alert("You don't have permission perform this task. An admin approval is required");
-                    response = await requestDeviceRemoveApproval(formData);
+                    response = await requestDeviceRemoveApproval(deviceId, userId);
                 }
 
                 if (response) {

@@ -12,8 +12,11 @@ import RadioSwitch from "@/app/components/formcomponents/switch/radioswitch";
 import Confirmation from "@/app/components/utils/confirmationmodal";
 import Spinner from "@/app/components/utils/spinner";
 import SuccessModal from "@/app/components/utils/successmodal";
+import { useRouter } from "next/navigation";
+import { checkUserMail } from "@/app/api/useraccounts";
 
 export default function BulkImportDevices() {
+    const router = useRouter();
     const initialData = {
         DataCenter: "",
         Cabinet: "",
@@ -59,6 +62,7 @@ export default function BulkImportDevices() {
         };
         fetchData();
     }, []);
+
 
     const handleInputChange = async (field, value) => {
         setDropdownData({
@@ -157,12 +161,19 @@ export default function BulkImportDevices() {
     const handleSubmit = () => {
         setShowConfirmation(true);
     };
-
     const handleConfirmSubmit = async () => {
-        setShowConfirmation(false); // Hide the confirmation modal
-        setLoading(true); // Show the spinner
+        setShowConfirmation(false);
+        setLoading(true);
 
         try {
+            const userId = localStorage.getItem("user");
+            const userMail = await checkUserMail(userId);
+            if (!userMail.Email) {
+                alert("You need to set up your email address in your account before proceeding.");
+                setLoading(false);
+                return;
+            }
+
             const userRole = localStorage.getItem("userRole");
             const formattedData = importedData.map((item) => ({
                 dataCenter: dropdownData.DataCenter || item.DataCenter,
@@ -188,11 +199,10 @@ export default function BulkImportDevices() {
                 result = await DirectImportBulk(formattedData);
                 setSuccessMessage('Devices imported successfully.');
             } else {
-                result = await requestBulkDeviceApproval(formattedData);
+                result = await requestBulkDeviceApproval(formattedData, userId);
                 setSuccessMessage('Approval request sent to the Admin.');
             }
 
-            console.log('Operation result:', result);
             setLoading(false);
             setShowSuccess(true);
 
@@ -202,7 +212,6 @@ export default function BulkImportDevices() {
             alert('Failed to send approval request: ' + (error.message || 'Unknown error'));
         }
     };
-
 
     return (
         <div className="container p-5">
@@ -222,7 +231,7 @@ export default function BulkImportDevices() {
                 message={successMessage}
                 onClose={() => {
                     setShowSuccess(false);
-                    handleClear();
+                    window.location.reload();
                 }}
             />
 
@@ -235,7 +244,7 @@ export default function BulkImportDevices() {
                 <div className="col-xl-6 p-1">
                     <FormInput
                         type="dropdown"
-                        label="Select Data Center"
+                        label={<span>Select DataCenter<span style={{ color: 'red' }}>*</span></span>}
                         options={dataCenterOptions}
                         value={dropdownData.DataCenter}
                         onChange={(val) => handleInputChange("DataCenter", val)}
@@ -244,7 +253,7 @@ export default function BulkImportDevices() {
 
                     <FormInput
                         type="dropdown"
-                        label="Select Cabinet"
+                        label={<span>Select Cabinet<span style={{ color: 'red' }}>*</span></span>}
                         options={cabinetOptions}
                         value={dropdownData.Cabinet}
                         onChange={(val) => handleInputChange("Cabinet", val)}
@@ -277,7 +286,7 @@ export default function BulkImportDevices() {
                 <div className="col-xl-8 p-1">
                     <FormInput
                         type="dropdown"
-                        label="Select Owner"
+                        label={<span>Select Owner<span style={{ color: 'red' }}>*</span></span>}
                         options={ownerOptions}
                         value={dropdownData.Owner}
                         onChange={(val) => handleInputChange("Owner", val)}
@@ -288,7 +297,7 @@ export default function BulkImportDevices() {
                 <div className="col-xl-4 p-1">
                     <FormInput
                         type="dropdown"
-                        label="Select Primary Contact"
+                        label={<span>Select Primary Contact<span style={{ color: 'red' }}>*</span></span>}
                         options={contactOptions}
                         value={dropdownData.PrimaryContact}
                         onChange={(val) => handleInputChange("PrimaryContact", val)}
@@ -328,7 +337,7 @@ export default function BulkImportDevices() {
                             {importedData.map((row, index) => (
                                 <tr key={index}>
                                     <td>{dropdownData.DataCenter || row.DataCenter}</td>
-                                    <td>{dropdownData.Cabinet || row.Cabinet}</td>
+                                    <td>{dropdownData.Cabinet.split(' - ')[1] || row.Cabinet}</td>
                                     <td>{dropdownData.Manufacturer || row.Manufacturer}</td>
                                     <td>{dropdownData.Model || row.Model}</td>
                                     <td>{dropdownData.Owner || row.Owner}</td>
@@ -341,7 +350,7 @@ export default function BulkImportDevices() {
                                     <td>{row.HalfDepth}</td>
                                     <td>{row.BackSide}</td>
                                     <td>{row.Hypervisor}</td>
-                                    <td>{row.InstallDate}</td>
+                                    <td>{new Date((row.InstallDate - 25569) * 86400 * 1000).toLocaleDateString()}</td>
                                     <td>{row.Reservation}</td>
                                 </tr>
                             ))}
