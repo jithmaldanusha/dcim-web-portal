@@ -1,11 +1,11 @@
-'use client'
+"use client";
 import { createContext, useState, useContext, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 
 const PageNameContext = createContext();
 
 export function PageNameProvider({ children }) {
-  const [pageName, setPageName] = useState("Dashboard");
+  const [pageName, setPageName] = useState('');
   const pathname = usePathname();
 
   const routeToPageName = {
@@ -17,7 +17,6 @@ export function PageNameProvider({ children }) {
     '/dashboard/infrastructure/importdevices': 'Import Devices',
     '/dashboard/users/manageaccount': 'My Account',
     '/dashboard/users/manageusers': 'Manage Users',
-    // Add more routes as needed
   };
 
   useEffect(() => {

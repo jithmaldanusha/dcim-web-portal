@@ -1,17 +1,22 @@
-"use client";
+"use client"
 import { useEffect, useState } from "react";
 import { usePageName } from "../pagenamecontext/page";
 import DropdownItemSingle from "../formcomponents/dropdown/dropdownSingle";
 import DropdownItem from "../formcomponents/dropdown/dropdown";
 
 export default function Sidebar() {
-  const { pageName, setPageName } = usePageName();
+  const context = usePageName();
+  if (!context) return null; // Return null if the context is not available
+
+  const { pageName, setPageName } = context;
   const [openDropdown, setOpenDropdown] = useState(null);
-  
-  const userRole = localStorage.getItem("userRole");
+  const [userId, setUserId] = useState('');
+  const [userRole, setUserName] = useState('');
 
   useEffect(() => {
     setOpenDropdown(null);
+    setUserName(localStorage.getItem('userRole'));
+    setUserId(localStorage.getItem('user'));
   }, [pageName]);
 
   const handleSelectItem = (itemName) => {
@@ -40,8 +45,8 @@ export default function Sidebar() {
       <div className="d-flex justify-content-between p-0 m-0">
         <div className="fs-6 m-0 p-0">
           <small>
-            <p className="m-0 p-0">User: {localStorage.getItem('user')}</p>
-            <p className="m-0 p-0">Role: {userRole}</p>
+            <p className="m-0 p-0">User: {typeof window !== "undefined" && userId}</p>
+            <p className="m-0 p-0">Role: {typeof window !== "undefined" && userRole}</p>
           </small>
         </div>
         <img src="/idclogo.svg" alt="Company Logo" className="img-fluid" style={{ width: "120px" }} />

@@ -1,18 +1,24 @@
-"use client";
+"use client"
 import { useState } from "react";
 import { usePageName } from "../pagenamecontext/page";
-import './page.css';
 import { Logout } from "@/app/api/session";
 import Confirmation from "../utils/confirmationmodal";
+import './page.css';
 
 export default function TopNavbar() {
-  const { pageName } = usePageName();
   const [isClicked, setIsClicked] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
+  if (typeof window === 'undefined') {
+    // Return nothing during SSR/SSG to avoid using the context
+    return null;
+  }
+
+  const { pageName } = usePageName();
+
   const handleLogoutClick = () => {
-    setIsClicked(true); // Turn the icon red
-    setShowModal(true); // Show confirmation modal
+    setIsClicked(true);
+    setShowModal(true);
   };
 
   const handleConfirmLogout = async () => {
@@ -24,7 +30,7 @@ export default function TopNavbar() {
     } catch (error) {
       console.error("Logout failed:", error.message);
     } finally {
-      setShowModal(false); // Close the modal after action
+      setShowModal(false);
     }
   };
 
@@ -33,15 +39,14 @@ export default function TopNavbar() {
       <nav className="navbar custom-nav" style={{ backgroundColor: 'blue' }}>
         <div className="container-fluid">
           <p className="fs-4 m-0 p-2 text-light">
-            {pageName} {/* Display the dynamic pagename */}
+            {pageName}
           </p>
-          
-          {/* Logout icon with tooltip */}
+
           <div className="logout-icon-wrapper">
             <img
               src="/formicons/logout.svg"
               alt="Logout"
-              className={`logout-icon ${isClicked ? 'clicked' : ''}`} 
+              className={`logout-icon ${isClicked ? 'clicked' : ''}`}
               onClick={handleLogoutClick}
             />
             <span className="tooltip-text">Logout</span>
@@ -49,7 +54,6 @@ export default function TopNavbar() {
         </div>
       </nav>
 
-      {/* Confirmation modal */}
       <Confirmation
         show={showModal}
         onClose={() => setShowModal(false)}

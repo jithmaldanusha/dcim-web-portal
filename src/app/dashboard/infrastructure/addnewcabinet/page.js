@@ -12,6 +12,8 @@ import { checkUserMail } from "@/app/api/useraccounts";
 
 export default function AddNewCabinets() {
     const router = useRouter();
+    const [userId, setUserId] = useState('')
+    const [userRole, setUserRole] = useState('')
     const initialFormData = {
         dataCenter: '',
         location: '',
@@ -58,6 +60,8 @@ export default function AddNewCabinets() {
     }, [router]);
 
     useEffect(() => {
+        setUserId(localStorage.getItem('user'))
+        setUserRole(localStorage.getItem('useRole'))
         const fetchData = async () => {
             try {
                 const dropdowndata = await getRequiredData();
@@ -107,9 +111,6 @@ export default function AddNewCabinets() {
 
     const handleSubmit = async () => {
         setLoading(true);
-        const userId = localStorage.getItem("user");
-        const userRole = localStorage.getItem("userRole");
-
         const { dataCenter, assignedTo, zone, cabinetRow, location, dateOfInstallation } = formData;
 
         // Check if all the required fields are filled

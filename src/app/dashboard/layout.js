@@ -3,8 +3,8 @@ import "./layout.css";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Sidebar from "../components/sidebar/page";
 import localFont from "next/font/local";
-import TopNavbar from "../components/topnavbar/page";
 import { PageNameProvider } from "../components/pagenamecontext/page";
+import TopNavbar from "../components/topnavbar/page";
 
 const geistSans = localFont({
   src: "../fonts/GeistVF.woff",

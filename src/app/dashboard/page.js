@@ -72,7 +72,7 @@ export default function Dashboard() {
         {/* Left section: Pending Requests */}
         <div className="col-6">
           <h6>Pending Requests</h6>
-          <div className="outer-container bg-warning shadow rounded" style={{ height: '60%' }}>
+          <div className="outer-container bg-warning shadow rounded" style={{ height: '50%' }}>
             <div className="inner-container p-3" style={{ height: '100%', overflowY: 'auto' }}>
               <table className="table table-striped">
                 <thead style={{ position: 'sticky', top: 0 }}>
@@ -111,7 +111,7 @@ export default function Dashboard() {
         {/* Right section: Rejected Requests */}
         <div className="col-6">
           <h6>Rejected Requests</h6>
-          <div className="outer-container bg-danger shadow rounded" style={{ height: '60%' }}>
+          <div className="outer-container bg-danger shadow rounded" style={{ height: '50%' }}>
             <div className="inner-container p-3" style={{ height: '100%', overflowY: 'auto' }}>
               <table className="table table-striped">
                 <thead style={{ position: 'sticky', top: 0 }}>
