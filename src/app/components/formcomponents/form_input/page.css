@@ -1,0 +1,31 @@
+.custom-input {
+  border-width: 2px;
+  /* Adjust thickness as needed */
+  border-color: #757575;
+  /* You can change the color if needed */
+  border-radius: 0.55rem;
+  /* Optional: keeps the default rounded corners */
+}
+
+.form-input-container {
+  position: relative;
+}
+
+.secondary-label {
+  position: absolute;
+  top: -8px;
+  /* Adjust as needed */
+  left: 12px;
+  /* Adjust as needed */
+  background-color: white;
+  /* To overlap input field */
+  padding: 0 4px;
+  font-size: 10px;
+  color: #333;
+  /* Custom text color */
+}
+
+.txt-container {
+  position: relative;
+  /* So the label is positioned relative to input */
+}

@@ -1,0 +1,47 @@
+.custom-nav {
+    background-color: #0255A9 !important;
+}
+
+.logout-icon-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.logout-icon-wrapper .tooltip-text {
+    visibility: hidden;
+    width: 60px;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    border-radius: 5px;
+    padding: 1px;
+    position: absolute;
+    top: 110%;
+    /* Position below the icon */
+    left: -200%;
+    transform: translateX(0);
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 1;
+    white-space: nowrap;
+    /* Prevent text wrapping */
+}
+
+.logout-icon-wrapper:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Turn the icon red on hover */
+.logout-icon:hover {
+    filter: brightness(0) saturate(100%) invert(23%) sepia(92%) saturate(6560%) hue-rotate(354deg) brightness(94%) contrast(101%);
+}
+
+/* Adjust the tooltip position if it overflows near the right edge */
+.logout-icon-wrapper.right-edge .tooltip-text {
+    left: auto;
+    /* Reset left */
+    right: 0;
+    /* Align tooltip to the right */
+    transform: translateX(0);
+}

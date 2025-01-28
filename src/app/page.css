@@ -1,0 +1,31 @@
+/* Style for input labels */
+.form-label {
+    color: black;
+    /* Label color */
+    font-weight: normal;
+}
+
+/* Input field styling */
+.form-control {
+    border-radius: 30px;
+    border: 3px solid #757575; /* Border color and width */
+    padding-right: 40px; /* Add space for the toggle icon */
+}
+
+/* Style for input when focused */
+.form-control:focus {
+    border-color: rgb(6, 154, 195);
+    box-shadow: none;
+    /* Disable shadow on focus */
+}
+
+/* Style for the password toggle icon */
+.password-toggle-icon {
+    position: absolute;
+    right: 20px;
+    top: 70%;
+    transform: translateY(-50%);
+    cursor: pointer;
+}
+
+  

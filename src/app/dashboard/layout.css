@@ -1,0 +1,16 @@
+
+/* Sidebar fixed styling */
+.sidebar-container {
+    position: sticky;
+    top: 0;
+    height: 100vh; /* Full viewport height */
+    overflow-y: auto; /* Enable vertical scrolling if the sidebar content is large */
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Main content scrolling */
+  .main-content {
+    height: 100vh; /* Full viewport height */
+    overflow-y: auto; /* Enable vertical scrolling */
+  }
+  

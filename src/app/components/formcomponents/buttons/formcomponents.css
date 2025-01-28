@@ -1,0 +1,17 @@
+.loginbtn {
+    background: rgba(7, 185, 236, 1)!important;
+}
+
+.loginbtn:hover {
+    background: rgb(6, 154, 195);
+    border: 1px solid black !important;
+}
+
+.clearbtn {
+    border: 1px solid black;
+}
+
+.clearbtn:hover {
+    background: #d9d9d9;
+    border: 1px solid black !important;
+}
