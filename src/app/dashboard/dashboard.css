@@ -1,0 +1,74 @@
+.pending-requests .outer-container {
+    background-color: #ccffcc;
+    /* Light green */
+}
+
+.rejected-requests .outer-container {
+    background-color: #ffcccc;
+    /* Light red */
+}
+
+.outer-container {
+    min-height: 300px;
+    /* Minimum height of the outer container */
+    border-radius: 10px;
+    overflow: hidden;
+    padding: 10px;
+    position: relative;
+}
+
+.inner-container {
+    height: 100%;
+    max-height: 300px;
+    overflow-y: auto;
+    /* Make the inner container scrollable */
+}
+
+.custom-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    table-layout: fixed;
+    /* Fix the layout for consistent column widths */
+}
+
+.custom-table thead th {
+    position: sticky;
+    top: 0;
+    background-color: rgba(255, 255, 255);
+    color: black;
+    z-index: 2;
+    /* Higher z-index to ensure header stays above table rows */
+}
+
+.custom-table tbody td {
+    background-color: rgba(255, 255, 255, 0.4);
+    color: black;
+}
+
+.custom-table tr {
+    border-bottom: 1px solid #ddd;
+}
+
+.custom-table tr:last-child {
+    border-bottom: none;
+}
+
+.custom-table tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+    /* Row hover effect */
+}
+
+.custom-table th,
+.custom-table td {
+    padding: 8px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+/* Fix z-index and sticky behavior for table headings */
+.custom-table thead th {
+    z-index: 2;
+    /* Ensure the header stays above content */
+}

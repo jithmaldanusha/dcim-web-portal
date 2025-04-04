@@ -84,9 +84,7 @@ export default function AddNewCabinets() {
 
     const handleModalClose = () => {
         setSessionExpired(false);
-        router.push("/").then(() => {
-            router.reload();
-        });
+        window.location.href = "/";
     };
 
     const handleInputChange = (field, value) => {

@@ -14,6 +14,8 @@ import Spinner from "@/app/components/utils/spinner";
 import SuccessModal from "@/app/components/utils/successmodal";
 import { useRouter } from "next/navigation";
 import { checkUserMail } from "@/app/api/useraccounts";
+import SessionTimeout from "@/app/components/utils/sessiontimeout";
+import { ValidateToken } from "@/app/api/session";
 
 export default function BulkImportDevices() {
     const router = useRouter();
@@ -26,6 +28,7 @@ export default function BulkImportDevices() {
         PrimaryContact: "",
     };
 
+    const [sessionExpired, setSessionExpired] = useState(false);
     const [dropdownData, setDropdownData] = useState(initialData);
     const [dataCenterOptions, setDataCenters] = useState([]);
     const [manufacturersOptions, setManufacturers] = useState([]);
@@ -45,6 +48,21 @@ export default function BulkImportDevices() {
 
 
     useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            setSessionExpired(true);
+            return;
+        }
+
+        const validateAndHandleExpiration = async () => {
+            try {
+                await ValidateToken(token);
+            } catch (error) {
+                localStorage.removeItem("token");
+                setSessionExpired(true);
+            }
+        };
+
         const fetchData = async () => {
             try {
                 const datacenters = await getDataCenters();
@@ -61,8 +79,13 @@ export default function BulkImportDevices() {
             }
         };
         fetchData();
+        validateAndHandleExpiration();
     }, []);
 
+    const handleModalClose = () => {
+        setSessionExpired(false);
+        window.location.href = "/";
+    };
 
     const handleInputChange = async (field, value) => {
         setDropdownData({
@@ -205,6 +228,7 @@ export default function BulkImportDevices() {
 
             setLoading(false);
             setShowSuccess(true);
+            handleClear();
 
         } catch (error) {
             setLoading(false);
@@ -215,6 +239,8 @@ export default function BulkImportDevices() {
 
     return (
         <div className="container p-5">
+            <SessionTimeout show={sessionExpired} onClose={handleModalClose} />
+
             <Confirmation
                 show={showConfirmation}
                 onClose={() => setShowConfirmation(false)}

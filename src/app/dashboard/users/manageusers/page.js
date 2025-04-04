@@ -6,9 +6,12 @@ import FormInput from "@/app/components/formcomponents/form_input/page";
 import Confirmation from "@/app/components/utils/confirmationmodal";
 import SuccessModal from "@/app/components/utils/successmodal";
 import Spinner from "@/app/components/utils/spinner";
+import SessionTimeout from "@/app/components/utils/sessiontimeout";
+import { ValidateToken } from "@/app/api/session";
 
 export default function ManageUsers() {
     const router = useRouter();
+    const [sessionExpired, setSessionExpired] = useState(false);
     const [allUsers, setAllUsers] = useState([]);
     const [feedback, setFeedback] = useState("");
     const [loading, setLoading] = useState(false);
@@ -19,6 +22,21 @@ export default function ManageUsers() {
     const [pendingAction, setPendingAction] = useState(null);
 
     useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            setSessionExpired(true);
+            return;
+        }
+
+        const validateAndHandleExpiration = async () => {
+            try {
+                await ValidateToken(token);
+            } catch (error) {
+                localStorage.removeItem("token");
+                setSessionExpired(true);
+            }
+        };
+
         const getUsers = async () => {
             try {
                 const response = await getAllUsers();
@@ -28,7 +46,13 @@ export default function ManageUsers() {
             }
         };
         getUsers();
-    }, []);
+        validateAndHandleExpiration();
+    }, [router]);
+
+    const handleModalClose = () => {
+        setSessionExpired(false);
+        window.location.href = "/";
+    };
 
     const [formData, setFormData] = useState({
         newUserId: "",
@@ -102,6 +126,8 @@ export default function ManageUsers() {
 
     return (
         <section className="container p-5">
+            <SessionTimeout show={sessionExpired} onClose={handleModalClose} />
+
             {feedback && <p>{feedback}</p>}
 
             {loading && <Spinner />}

@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { ValidateToken } from "../api/session";
 import { useRouter } from "next/navigation";
 import SessionTimeout from "../components/utils/sessiontimeout";
-import { fetchPendingRequests, fetchRejectedRequests } from "../api/requests"; // Import the new API function
+import { fetchPendingRequests, fetchRejectedRequests } from "../api/requests";
+import './dashboard.css';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -70,11 +71,11 @@ export default function Dashboard() {
       {/* Two equal sections for tables */}
       <div className="row mt-5">
         {/* Left section: Pending Requests */}
-        <div className="col-6">
+        <div className="col-6 pending-requests">
           <h6>Pending Requests</h6>
-          <div className="outer-container bg-warning shadow rounded" style={{ height: '50%' }}>
-            <div className="inner-container p-3" style={{ height: '100%', overflowY: 'auto' }}>
-              <table className="table table-striped">
+          <div className="outer-container shadow rounded">
+            <div className="inner-container p-3">
+              <table className="table custom-table">
                 <thead style={{ position: 'sticky', top: 0 }}>
                   <tr>
                     <th>Request ID</th>
@@ -109,11 +110,11 @@ export default function Dashboard() {
         </div>
 
         {/* Right section: Rejected Requests */}
-        <div className="col-6">
+        <div className="col-6 rejected-requests">
           <h6>Rejected Requests</h6>
-          <div className="outer-container bg-danger shadow rounded" style={{ height: '50%' }}>
-            <div className="inner-container p-3" style={{ height: '100%', overflowY: 'auto' }}>
-              <table className="table table-striped">
+          <div className="outer-container shadow rounded">
+            <div className="inner-container p-3">
+              <table className="table custom-table">
                 <thead style={{ position: 'sticky', top: 0 }}>
                   <tr>
                     <th>Request ID</th>
