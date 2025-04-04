@@ -85,9 +85,7 @@ export default function ManageCabinet() {
 
     const handleModalClose = () => {
         setSessionExpired(false);
-        router.push("/").then(() => {
-            router.reload();
-        });
+        window.location.href = "/";
     };
 
     const handleInputChange = (field, value) => {

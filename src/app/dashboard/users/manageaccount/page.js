@@ -4,10 +4,11 @@ import { useRouter } from "next/navigation";
 import { updateUsernameAPI, updateEmailAPI, updatePasswordAPI, updateRoleAPI, fetchUserData, updateEmailPassAPI } from "@/app/api/useraccounts";
 import FormInput from "@/app/components/formcomponents/form_input/page";
 import Confirmation from "@/app/components/utils/confirmationmodal";
-import { Logout } from "@/app/api/session";
+import { Logout, ValidateToken } from "@/app/api/session";
+import SessionTimeout from "@/app/components/utils/sessiontimeout";
 
 export default function ManageAccount() {
-    const router = useRouter();
+    const [sessionExpired, setSessionExpired] = useState(false);
     const [message, setConfirmationMessage] = useState();
     const [showConfirmation, setShowConfirmation] = useState(false);
     const [confirmationAction, setConfirmationAction] = useState(null);
@@ -22,6 +23,20 @@ export default function ManageAccount() {
 
     useEffect(() => {
         const storedUserId = localStorage.getItem("user");
+        const token = localStorage.getItem("token");
+            if (!token) {
+              setSessionExpired(true);
+              return;
+            }
+        
+            const validateAndHandleExpiration = async () => {
+              try {
+                await ValidateToken(token);
+              } catch (error) {
+                localStorage.removeItem("token");
+                setSessionExpired(true);
+              }
+            };
 
         const getUser = async () => {
             try {
@@ -41,8 +56,13 @@ export default function ManageAccount() {
             }
         };
         getUser();
+        validateAndHandleExpiration();
     }, []);
 
+    const handleModalClose = () => {
+        setSessionExpired(false);
+        window.location.href = "/";
+      };
 
     const [formData, setFormData] = useState({
         newUserId: "",
@@ -124,6 +144,7 @@ export default function ManageAccount() {
 
     return (
         <section className="container p-5">
+            <SessionTimeout show={sessionExpired} onClose={handleModalClose} />
             {feedback && <p>{feedback}</p>}
 
             <Confirmation

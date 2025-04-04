@@ -89,9 +89,7 @@ export default function AddNewDevice() {
 
     const handleModalClose = () => {
         setSessionExpired(false);
-        router.push("/").then(() => {
-            router.reload();
-        });
+        window.location.href = "/";
     };
 
     const handleInputChange = async (field, value) => {
