@@ -9,6 +9,7 @@ import Spinner from "@/app/components/utils/spinner";
 import SuccessModal from "@/app/components/utils/successmodal";
 import { deleteDevice, getDeviceByID, getLabelByCabinet, getModelsByManufacturer, getRequiredDeviceData, requestDeviceRemoveApproval, requestDeviceUpdateApproval, UpdateDevice } from "@/app/api/devices";
 import { getCabinetsByDataCenter } from "@/app/api/cabinets";
+import { checkUserMail } from "@/app/api/useraccounts";
 
 export default function ManageDevices() {
     const router = useRouter();
@@ -208,6 +209,14 @@ export default function ManageDevices() {
             }
 
             if (actionType == "delete") {
+                
+                const userMail = await checkUserMail(userId);
+                if (!userMail?.Email?.[0]?.Email) {
+                    alert("You need to set up your email address in your account before proceeding.");
+                    setLoading(false);
+                    return;
+                }
+
                 let response;
                 if (userRole === "Super-Admin" || userRole === "Admin") {
                     const deviceId = formData.selectedlabel.split(' - ')[0]
