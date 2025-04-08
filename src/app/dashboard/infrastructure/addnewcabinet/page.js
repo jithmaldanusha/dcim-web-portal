@@ -61,7 +61,7 @@ export default function AddNewCabinets() {
 
     useEffect(() => {
         setUserId(localStorage.getItem('user'))
-        setUserRole(localStorage.getItem('useRole'))
+        setUserRole(localStorage.getItem('userRole'))
         const fetchData = async () => {
             try {
                 const dropdowndata = await getRequiredData();
@@ -97,6 +97,7 @@ export default function AddNewCabinets() {
     const handleClear = () => {
         setFormData(initialFormData);
     };
+
     const handleConfirmSubmit = () => {
         setShowConfirmation(false);
         handleSubmit();
@@ -114,21 +115,22 @@ export default function AddNewCabinets() {
         // Check if all the required fields are filled
         if (!dataCenter || !assignedTo || !zone || !cabinetRow || !location || !dateOfInstallation) {
             alert("Please ensure all the required fields are entered");
-            setLoading(false);
+            setLoading(false)
             return;
         }
 
         try {
-            // Check if the user's email is set up
             const userMail = await checkUserMail(userId);
-            if (!userMail.Email) {
+            const userEmail = userMail?.Email?.[0]?.Email;
+
+            if (!userEmail || userEmail.trim() === "") {
                 alert("You need to set up your email address in your account before proceeding.");
                 setLoading(false);
                 return;
             }
 
             let response;
-            // If the user is an admin, allow cabinet addition, otherwise request approval
+            console.log(userRole, userId);
             if (userRole === "Super-Admin" || userRole === "Admin") {
                 response = await addNewCabinet(formData);
             } else {
