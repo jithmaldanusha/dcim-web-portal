@@ -139,8 +139,8 @@ export default function AddNewDevice() {
         const userId = localStorage.getItem("user");
         const userRole = localStorage.getItem("userRole");
 
-        const { dataCenter, location, owner, label, installDate } = formData;
-        if (!dataCenter || !location || !owner || !label || !installDate) {
+        const { dataCenter, location, owner, label, installDate, primaryContact } = formData;
+        if (!dataCenter || !location || !owner || !label || !installDate || !primaryContact) {
             alert("Please ensure all the required fields are entered");
             setLoading(false);
             return;
@@ -241,7 +241,7 @@ export default function AddNewDevice() {
                             />
                             <FormInput
                                 type="dropdown"
-                                label="Primary Contact"
+                                label={<span>Primary Contact<span style={{ color: 'red' }}>*</span></span>}
                                 options={contacts}
                                 value={formData.primaryContact}
                                 onChange={(val) => handleInputChange('primaryContact', val)}
@@ -294,7 +294,7 @@ export default function AddNewDevice() {
                             />
                             <FormInput
                                 type="date"
-                                label="Date of Installation"
+                                label={<span>Date of Installation<span style={{ color: 'red' }}>*</span></span>}
                                 value={formData.installDate}
                                 onChange={(val) => handleInputChange('installDate', val)}
                             />

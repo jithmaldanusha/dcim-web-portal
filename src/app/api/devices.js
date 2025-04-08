@@ -36,6 +36,7 @@ export const AddDevice = async (formData) => {
 
 export const UpdateDevice = async (formData, deviceID) => {
     try {
+        console.log(formData)
         const response = await axios.put(`${API_BASE_URL}/api/devices/updateDevice/${deviceID}`, formData);
         return response.data;
     } catch (error) {

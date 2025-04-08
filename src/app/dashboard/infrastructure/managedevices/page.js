@@ -186,13 +186,12 @@ export default function ManageDevices() {
         const userId = localStorage.getItem("user");
         const userRole = localStorage.getItem("userRole");
 
-        const { dataCenter, location, label, installDate } = formData;
-        if (!dataCenter || !location || !label || !installDate) {
+        const { dataCenter, location, owner, label, installDate, primaryContact } = formData;
+        if (!dataCenter || !location || !owner || !label || !installDate || !primaryContact) {
             alert("Please ensure all the required fields are entered");
             setLoading(false);
             return;
         }
-
         try {
             const deviceId = formData.selectedlabel.split(' - ')[0]
 
@@ -209,7 +208,7 @@ export default function ManageDevices() {
             }
 
             if (actionType == "delete") {
-                
+
                 const userMail = await checkUserMail(userId);
                 if (!userMail?.Email?.[0]?.Email) {
                     alert("You need to set up your email address in your account before proceeding.");
@@ -329,7 +328,7 @@ export default function ManageDevices() {
                             />
                             <FormInput
                                 type="dropdown"
-                                label="Primary Contact"
+                                label={<span>Primary Contact<span style={{ color: 'red' }}>*</span></span>}
                                 options={contacts}
                                 value={formData.primaryContact}
                                 onChange={(val) => handleInputChange('primaryContact', val)}
@@ -372,7 +371,7 @@ export default function ManageDevices() {
                             />
                             <FormInput
                                 type="date"
-                                label="Date of Installation"
+                                label={<span>Date of Installation<span style={{ color: 'red' }}>*</span></span>}
                                 value={formData.installDate}
                                 onChange={(val) => handleInputChange('installDate', val)}
                             />
