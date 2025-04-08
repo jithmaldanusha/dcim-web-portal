@@ -7,8 +7,9 @@ import SessionTimeout from "@/app/components/utils/sessiontimeout";
 import Confirmation from "@/app/components/utils/confirmationmodal";
 import Spinner from "@/app/components/utils/spinner";
 import SuccessModal from "@/app/components/utils/successmodal";
-import { AddDevice, getModelsByManufacturer, getRequiredDeviceData, requestDeviceAddApproval} from "@/app/api/devices";
+import { AddDevice, getModelsByManufacturer, getRequiredDeviceData, requestDeviceAddApproval } from "@/app/api/devices";
 import { getCabinetsByDataCenter } from "@/app/api/cabinets";
+import { checkUserMail } from "@/app/api/useraccounts";
 
 export default function AddNewDevice() {
     const router = useRouter();
@@ -97,7 +98,7 @@ export default function AddNewDevice() {
             ...prevState,
             [field]: value
         }));
-    
+
         if (field === "dataCenter") {
             try {
                 const cabinets = await getCabinetsByDataCenter(value);
@@ -107,7 +108,7 @@ export default function AddNewDevice() {
                 console.error("Error fetching cabinets:", err);
             }
         }
-    
+
         if (field === "manufacturer") {
             try {
                 const models = await getModelsByManufacturer(value);
@@ -118,7 +119,7 @@ export default function AddNewDevice() {
                 setModelOptions([]);
             }
         }
-    };    
+    };
 
     const handleClear = () => {
         setFormData(initialFormData);
@@ -141,6 +142,13 @@ export default function AddNewDevice() {
         const { dataCenter, location, owner, label, installDate } = formData;
         if (!dataCenter || !location || !owner || !label || !installDate) {
             alert("Please ensure all the required fields are entered");
+            setLoading(false);
+            return;
+        }
+
+        const userMail = await checkUserMail(userId);
+        if (!userMail?.Email?.[0]?.Email) {
+            alert("You need to set up your email address in your account before proceeding.");
             setLoading(false);
             return;
         }

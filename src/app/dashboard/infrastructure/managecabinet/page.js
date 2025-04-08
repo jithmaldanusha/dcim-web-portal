@@ -160,7 +160,7 @@ export default function ManageCabinet() {
         try {
             // Check if the user's email is set up
             const userMail = await checkUserMail(userId);
-            if (!userMail.Email) {
+            if (!userMail?.Email?.[0]?.Email) {
                 alert("You need to set up your email address in your account before proceeding.");
                 setLoading(false);
                 return;
