@@ -337,7 +337,7 @@ export default function ManageDevices() {
 
                             <FormInput
                                 type="text"
-                                label={`Height(U)`}
+                                label={<span>Height-U<span style={{ color: 'red' }}>*</span></span>}
                                 placeholder=""
                                 value={formData.height}
                                 onChange={(val) => handleInputChange('height', val)}
