@@ -134,6 +134,7 @@ export default function ManageDevices() {
         if (field === "selectedlabel") {
             try {
                 const deviceData = await getDeviceByID(value.split(' - ')[0]);
+                console.log(deviceData.primaryContact)
                 setFormData((prevData) => ({
                     ...prevData,
                     position: deviceData.position,
@@ -151,7 +152,6 @@ export default function ManageDevices() {
                     reservation: deviceData.status,
                     owner: deviceData.owner,
                     primaryContact: deviceData.primaryContact,
-
                 }));
             } catch (err) {
                 console.error("Error fetching devices:", err);
@@ -197,6 +197,7 @@ export default function ManageDevices() {
 
             if (actionType == "update") {
                 let response;
+                console.log(formData)
                 response = await UpdateDevice(formData, deviceId);
 
                 if (response) {
@@ -337,8 +338,10 @@ export default function ManageDevices() {
                             <FormInput
                                 type="text"
                                 label={`Height(U)`}
+                                placeholder=""
                                 value={formData.height}
                                 onChange={(val) => handleInputChange('height', val)}
+                                disabled
                             />
 
                         </div>
